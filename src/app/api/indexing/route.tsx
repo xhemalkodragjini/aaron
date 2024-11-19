@@ -1,8 +1,7 @@
 // src/app/api/indexing/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadDocuments, FirestoreUploadError } from './uploadDocuments';
-import { getAdminDb, collections } from '@/lib/Firebase/FirebaseAdmin';
+import { getCollection } from '@/lib/Firebase/Firestore';
 import { startIndexingPipeline } from './scraping';
 
 // POST route to trigger indexing pipeline
@@ -84,16 +83,11 @@ export async function POST(request: NextRequest) {
 // GET route to fetch all docs in Firebase Storage
 export async function GET() {
   try {
-    const db = getAdminDb();
-    const snapshot = await collections.documents(db).get();
+    // console.log('fetch called')
 
+    const documents = await getCollection("documents")
 
-    const documents = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    console.log('Docs in storage fetched: ' + documents)
+    // console.log('Docs in storage fetched: ' + documents)
 
     return NextResponse.json({ documents });
   } catch (error) {

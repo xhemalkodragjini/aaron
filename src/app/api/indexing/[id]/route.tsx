@@ -1,13 +1,23 @@
 // src/app/api/indexing/[id]/route.ts
 import { NextResponse } from 'next/server';
-import { getAdminDb, collections } from '@/lib/Firebase/FirebaseAdmin';
+import { db } from '@/lib/Firebase/FirebaseConfig';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  writeBatch, 
+  doc
+} from 'firebase/firestore';
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: { id: string } }
 ) {
+    // Await the params
+    const { id } = await context.params;
 
-    if (!params.id) {
+    if (!id) {
         return NextResponse.json(
             { success: false, error: 'Document ID is required' },
             { status: 400 }
@@ -15,22 +25,29 @@ export async function DELETE(
     }
 
     try {
-        const db = getAdminDb();
+        // Create query for chunks
+        const chunksCollection = collection(db, 'chunks');
+        const chunksQuery = query(
+            chunksCollection,
+            where('documentId', '==', id)
+        );
+        
+        // Get chunks
+        const chunksSnapshot = await getDocs(chunksQuery);
 
-        // Delete chunks first
-        const chunksRef = collections.chunks(db);
-        const chunks = await chunksRef
-            .where('documentId', '==', params.id)
-            .get();
+        // Create a batch operation
+        const batch = writeBatch(db);
 
-        const batch = db.batch();
-        chunks.docs.forEach(doc => {
-            batch.delete(doc.ref);
+        // Add chunk deletions to batch
+        chunksSnapshot.docs.forEach(chunk => {
+            batch.delete(chunk.ref);
         });
 
-        // Delete document
-        batch.delete(collections.documents(db).doc(params.id));
+        // Add main document deletion to batch
+        const documentRef = doc(db, 'documents', id);
+        batch.delete(documentRef);
 
+        // Execute the batch
         await batch.commit();
 
         return NextResponse.json({ success: true });

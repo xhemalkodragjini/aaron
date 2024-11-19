@@ -1,7 +1,19 @@
 // src/lib/Firebase/uploadDocuments.ts
 
-import { getAdminDb, collections } from '@/lib/Firebase/FirebaseAdmin';
-import { Timestamp, Firestore } from 'firebase-admin/firestore';
+import { db } from '@/lib/Firebase/FirebaseConfig';
+import { 
+  collection, 
+  doc,
+  setDoc,
+  getDocs,
+  query,
+  where,
+  writeBatch,
+  serverTimestamp,
+  getDoc,
+  Timestamp,
+  deleteDoc
+} from 'firebase/firestore';
 
 interface DocumentToUpload {
   url: string;
@@ -24,33 +36,28 @@ export class FirestoreUploadError extends Error {
 }
 
 export async function uploadDocuments(documents: DocumentToUpload[]): Promise<ProcessedDocument[]> {
-  const db = getAdminDb();
-  const processedDocs = await processDocuments(documents, db);
-  
+  const processedDocs = await processDocuments(documents);
   return processedDocs;
 }
 
-async function processDocuments(
-  documents: DocumentToUpload[], 
-  db: Firestore
-): Promise<ProcessedDocument[]> {
-  const documentsCollection = collections.documents(db);
-  const chunksCollection = collections.chunks(db);
+async function processDocuments(documents: DocumentToUpload[]): Promise<ProcessedDocument[]> {
+  const documentsCollection = collection(db, 'documents');
+  const chunksCollection = collection(db, 'chunks');
   const processedDocuments: ProcessedDocument[] = [];
   
   // Process in batches of 500 (Firestore limit)
   const batchSize = 500;
   for (let i = 0; i < documents.length; i += batchSize) {
-    const batch = db.batch();
+    const batch = writeBatch(db);
     const currentBatch = documents.slice(i, i + batchSize);
     
-    for (const doc of currentBatch) {
-      const id = generateDocumentId(doc.url);
+    for (const document of currentBatch) {
+      const id = generateDocumentId(document.url);
       
       // Check for existing document
-      const existingDoc = await documentsCollection.doc(id).get();
+      const existingDoc = await getDoc(doc(documentsCollection, id));
       
-      if (existingDoc.exists) {
+      if (existingDoc.exists()) {
         console.log(`Replacing existing document: ${id}`);
         await deleteExistingChunks(id, chunksCollection);
       }
@@ -58,15 +65,20 @@ async function processDocuments(
       // Create new document
       const newDoc: ProcessedDocument = {
         id,
-        url: doc.url,
+        url: document.url,
         indexedAt: null,
         status: 'pending',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       };
 
-      const docRef = documentsCollection.doc(id);
-      batch.set(docRef, newDoc);
+      const docRef = doc(documentsCollection, id);
+      batch.set(docRef, {
+        ...newDoc,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
       processedDocuments.push(newDoc);
     }
 
@@ -87,15 +99,17 @@ async function processDocuments(
 
 async function deleteExistingChunks(
   documentId: string, 
-  chunksCollection: FirebaseFirestore.CollectionReference
+  chunksCollection: any
 ): Promise<void> {
-  const chunksSnapshot = await chunksCollection
-    .where('documentId', '==', documentId)
-    .get();
+  const chunksQuery = query(
+    chunksCollection,
+    where('documentId', '==', documentId)
+  );
+  
+  const chunksSnapshot = await getDocs(chunksQuery);
   
   if (!chunksSnapshot.empty) {
-    const db = getAdminDb();
-    const batch = db.batch();
+    const batch = writeBatch(db);
     
     chunksSnapshot.docs.forEach(chunkDoc => {
       batch.delete(chunkDoc.ref);
