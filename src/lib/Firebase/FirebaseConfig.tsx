@@ -1,9 +1,7 @@
-import { initializeApp } from "firebase/app";
-// import { getFirestore } from "firebase/firestore";
-// import { getAnalytics } from "firebase/analytics";
+import { initializeApp, getApps } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from 'firebase/auth'
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyB8eV17zj0jS6yetnE1fKEVG3Ztt_h5xIA",
   authDomain: "poerschmann-ce-intern.firebaseapp.com",
@@ -14,9 +12,10 @@ const firebaseConfig = {
   measurementId: "G-VRB7R9GV3W"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// const db = getFirestore(app);
-// const analytics = getAnalytics(app);
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export { app, firebaseConfig };
+// const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+export { app, db, auth };
