@@ -18,6 +18,7 @@ import {
   FieldValue,
 } from "@google-cloud/firestore";
 
+import { DocumentScraper } from '@/app/api/indexing/scraping'
 
 export class ProcessingError extends Error {
   constructor(message: string, public details?: any) {
@@ -26,16 +27,17 @@ export class ProcessingError extends Error {
   }
 }
 
-// Scraping utility function
-async function scrapeDocument(url: string): Promise<string> {
-  // Implement web scraping logic here
-  // This should fetch and parse the GCP documentation page
-  const response = await fetch(url);
-  const html = await response.text();
-  // Add HTML parsing logic here
-  return html;
-};
+// // Scraping utility function
+// async function scrapeDocument(url: string): Promise<string> {
+//   // Implement web scraping logic here
+//   // This should fetch and parse the GCP documentation page
+//   const response = await fetch(url);
+//   const html = await response.text();
+//   // Add HTML parsing logic here
+//   return html;
+// };
 
+const docScraper = new DocumentScraper();
 
 const generateChunkId: DocumentIdGenerator = (documentId: string, chunkIndex: number) => {
   return `${documentId}-chunk-${chunkIndex}`;
@@ -61,7 +63,9 @@ export class DocumentProcessor {
       });
 
       // Step 2: Scrape document content
-      const scrapedContent = await scrapeDocument(doc.data.url);
+      // const scrapedContent = await scrapeDocument(doc.data.url);
+      const scrapedContent = await docScraper.scrapeUrl(doc.data.url);
+
       // Clean and validate content immediately after scraping
       const cleanedContent = this.cleanHtmlContent(scrapedContent);
       

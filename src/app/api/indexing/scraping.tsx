@@ -1,9 +1,5 @@
 // src/app/api/indexing/scraping.ts
-import { chromium } from 'playwright';
-import { ChunkingConfig, chunkSection, optimizeChunksForEmbedding } from './chunking';
-import { EmbeddingService } from './embedding';
-import { Timestamp } from 'firebase-admin/firestore';
-import { getDocument } from '@/lib/Firebase/Firestore';
+import { load } from 'cheerio';
 
 export interface DocumentMetadata {
   title: string;
@@ -21,173 +17,81 @@ export interface DocumentChunk {
   };
 }
 
-export class DocumentProcessor {
-  private embeddingService: EmbeddingService;
+export class DocumentScraper {
+  // private embeddingService: EmbeddingService;
 
-  constructor(projectId: string) {
-    this.embeddingService = new EmbeddingService(projectId);
+  // constructor(projectId: string) {
+  //   // this.embeddingService = new EmbeddingService(projectId);
+  // }
+
+  async scrapeUrl(url: string): Promise<string> {
+    const response = await fetch(url);
+    const html = await response.text();
+
+    // Use cheerio for lightweight HTML parsing
+    const $ = load(html);
+
+    // Target GCP doc specific structure
+    const content = $('.devsite-article-body')
+      .find('p, ul, ol, pre, h1, h2, h3, h4, h5, h6')
+      .map((_, el) => $(el).text().trim())
+      .get()
+      .join('\n\n');
+
+    return content;
   }
 
-  async processDocument(documentId: string, url: string): Promise<void> {
-    const db = getAdminDb();
-    const docRef = collections.documents(db).doc(documentId);
+  // async scrapeUrl(url: string): Promise<string> {
+  //   const browser = await chromium.launch();
+  //   const page = await browser.newPage();
 
-    try {
-      // Update status to processing
-      await docRef.update({
-        status: 'processing',
-        updatedAt: Timestamp.now()
-      });
+  //   // const response = await fetch(url);
+  //   // const html = await response.text();
 
-      // Scrape content sections
-      const sections = await this.scrapeUrl(url);
+  //   try {
+  //     // await page.goto(url, { waitUntil: 'networkidle' });
 
-      console.log('doc sections: ' + sections)
+  //     const sections = await page.evaluate(() => {
+  //       const sections: string[] = [];
+  //       const body = document.querySelector('.devsite-article-body');
 
-      // Process content sections
-      let allChunks: DocumentChunk[] = [];
-      for (const [index, section] of sections.entries()) {
-        const sectionChunks = this.createChunks(section, documentId, {
-          section: `Section ${index + 1}`
-        });
-        allChunks = [...allChunks, ...sectionChunks];
-      }
+  //       if (!body) return [''];
 
-      // Generate embeddings for all chunks
-      const embeddings = await this.generateEmbeddings(allChunks.map(c => c.content));
+  //       let paragraphs: string[] = [];
+  //       const processNode = (node: Element) => {
+  //         if (node.tagName === 'P' || node.tagName === 'UL') {
+  //           paragraphs.push(node.textContent?.trim() || '');
+  //         }
+  //       };
 
-      // Store chunks and embeddings
-      await this.storeChunks(documentId, allChunks, embeddings);
+  //       // Process first section before any h2
+  //       let currentNode = body.firstElementChild;
+  //       while (currentNode && currentNode.tagName !== 'H2') {
+  //         processNode(currentNode);
+  //         currentNode = currentNode.nextElementSibling;
+  //       }
+  //       sections.push(paragraphs.join(' '));
 
-      // Update document status
-      await docRef.update({
-        status: 'indexed',
-        indexedAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      });
+  //       // Process each h2 section
+  //       const h2Elements = body.querySelectorAll('h2');
+  //       h2Elements.forEach(h2 => {
+  //         paragraphs = [];
+  //         let nextNode = h2.nextElementSibling;
 
-    } catch (error) {
-      console.error(`Error processing document ${documentId}:`, error);
-      await docRef.update({
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        updatedAt: Timestamp.now()
-      });
-      throw error;
-    }
-  }
+  //         while (nextNode && nextNode.tagName !== 'H2') {
+  //           processNode(nextNode);
+  //           nextNode = nextNode.nextElementSibling;
+  //         }
 
-  private async scrapeUrl(url: string): Promise<string[]> {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
+  //         sections.push(paragraphs.join(' '));
+  //       });
 
-    try {
-      await page.goto(url, { waitUntil: 'networkidle' });
+  //       return sections;
+  //     });
 
-      const sections = await page.evaluate(() => {
-        const sections: string[] = [];
-        const body = document.querySelector('.devsite-article-body');
-
-        if (!body) return [''];
-
-        let paragraphs: string[] = [];
-        const processNode = (node: Element) => {
-          if (node.tagName === 'P' || node.tagName === 'UL') {
-            paragraphs.push(node.textContent?.trim() || '');
-          }
-        };
-
-        // Process first section before any h2
-        let currentNode = body.firstElementChild;
-        while (currentNode && currentNode.tagName !== 'H2') {
-          processNode(currentNode);
-          currentNode = currentNode.nextElementSibling;
-        }
-        sections.push(paragraphs.join(' '));
-
-        // Process each h2 section
-        const h2Elements = body.querySelectorAll('h2');
-        h2Elements.forEach(h2 => {
-          paragraphs = [];
-          let nextNode = h2.nextElementSibling;
-
-          while (nextNode && nextNode.tagName !== 'H2') {
-            processNode(nextNode);
-            nextNode = nextNode.nextElementSibling;
-          }
-
-          sections.push(paragraphs.join(' '));
-        });
-
-        return sections;
-      });
-
-      return sections.filter(section => section.trim() !== '');
-    } finally {
-      await browser.close();
-    }
-  }
-
-  private createChunks(
-    content: string,
-    documentId: string,
-    metadata: Partial<DocumentMetadata> = {}
-  ): DocumentChunk[] {
-    // Use the chunking utility to split the content
-    const chunks = chunkSection(content);
-
-    // Optimize chunks for embedding
-    const optimizedChunks = optimizeChunksForEmbedding(chunks);
-
-    // Process chunks into storable format
-    return optimizedChunks.map((content, index) => ({
-      id: `${documentId}-chunk-${index}`,
-      documentId,
-      content,
-      metadata: {
-        ...metadata,
-        chunkIndex: index,
-        totalChunks: optimizedChunks.length
-      }
-    }));
-  }
-
-  private async generateEmbeddings(contents: string[]): Promise<number[][]> {
-    return await this.embeddingService.getEmbeddings(contents);
-  }
-
-  private async storeChunks(
-    documentId: string,
-    chunks: DocumentChunk[],
-    embeddings: number[][]
-  ): Promise<void> {
-    const db = getAdminDb();
-    const batch = db.batch();
-    const chunksCollection = collections.chunks(db);
-
-    chunks.forEach((chunk, index) => {
-      const chunkRef = chunksCollection.doc(chunk.id);
-      batch.set(chunkRef, {
-        ...chunk,
-        embedding: embeddings[index],
-        createdAt: Timestamp.now()
-      });
-    });
-
-    await batch.commit();
-  }
-}
-
-// Export a function to start the indexing pipeline
-export async function startIndexingPipeline(documentId: string): Promise<void> {
-  const doc = await getDocument("documents", documentId);
-
-  console.log(doc)
-
-  if (!doc) {
-    throw new Error('Document empty!');
-  }
-
-  const processor = new DocumentProcessor(process.env.GCP_PROJECT_ID!);
-  await processor.processDocument(documentId, doc.url);
+  //     return sections.join('\n');
+  //   } finally {
+  //     await browser.close();
+  //   }
+  // }
 }
