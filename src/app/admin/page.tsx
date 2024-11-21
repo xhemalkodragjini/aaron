@@ -28,7 +28,6 @@ const AdminPanel = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
 
   // Handlers
-
   const startIndexing = async () => {
     setIsIndexing(true);
     setIndexingStatus('running');
@@ -79,6 +78,8 @@ const AdminPanel = () => {
       if (!urlList.every(url => url.startsWith('https://cloud.google.com/'))) {
         throw new Error('All URLs must be Google Cloud documentation URLs starting with "https://cloud.google.com"');
       }
+
+      console.log('sending to /indexing: ' + JSON.stringify({ urls: urlList }))
       
       const response = await fetch('/api/indexing', {
         method: 'POST',
