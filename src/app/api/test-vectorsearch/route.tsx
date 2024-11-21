@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
     const vectorQuery: VectorQuery = chunksCollection.findNearest({
       queryVector: queryVector,
       vectorField: 'embedding',
-      limit: body.limit || 5,
-      distanceMeasure: 'COSINE'
+      limit: body.limit || 10,
+      distanceMeasure: 'EUCLIDEAN'
     });
 
     // Execute search
