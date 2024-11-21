@@ -1,26 +1,33 @@
 // src/app/api/indexing/embedding.ts
 import { PredictionServiceClient, helpers } from '@google-cloud/aiplatform';
-// import {  } from '@google-cloud/aiplatform';
+// import { aiplatform } from '@google-cloud/aiplatform';
 import { google } from '@google-cloud/aiplatform/build/protos/protos';
+import { FieldValue, VectorValue } from "@google-cloud/firestore";
+
+const aiplatform = require('@google-cloud/aiplatform');
+
 
 export interface EmbeddingConfig {
   maxBatchSize: number;
   modelId: string;
   location: string;
+  dimensionality: number;
 }
 
 const DEFAULT_CONFIG: EmbeddingConfig = {
   maxBatchSize: 5,  // Vertex AI batch limit
   modelId: process.env.EMBEDDING_MODEL_ID || 'text-embedding-005',
-  location: process.env.GCP_REGION || 'europe-west1'
+  location: process.env.GCP_REGION || 'europe-west1',
+  dimensionality: 768
 };
 
+
 export class EmbeddingService {
-  private client: PredictionServiceClient;
+  private client: PredictionServiceClient = aiplatform.v1;
   private endpoint: string;
 
   constructor(
-    private projectId: string,
+    private projectId: string = process.env.GCP_PROJECT_ID!,
     private config: EmbeddingConfig = DEFAULT_CONFIG
   ) {
     this.client = new PredictionServiceClient({
