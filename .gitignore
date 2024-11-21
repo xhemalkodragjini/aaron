@@ -29,8 +29,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env files (can opt-in for commiting if needed)
-.env*
+# # local env files
+# .env
+# .env*.local
+# !.env.example
+
+poerschmann-ce-intern-firebase-adminsdk-laexk-33fb4db8dc.json
 
 # vercel
 .vercel
