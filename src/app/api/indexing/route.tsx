@@ -1,13 +1,125 @@
 // src/app/api/indexing/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadDocuments, FirestoreUploadError } from './uploadDocuments';
-import { getCollection } from '@/lib/Firebase/Firestore';
-import { startIndexingPipeline } from './scraping';
+import { getCollection, uploadDocumentBatch, updateDocument, uploadChunkBatch } from '@/lib/Firebase/Firestore';
+import {
+  DocumentFields,
+  ChunkFields,
+  UploadResponse,
+  DocumentStatus,
+  InputURLValidator,
+  DocumentIdGenerator,
+  BatchConfig,
+} from '@/lib/Firebase/types';
+import { DocumentProcessor } from './processing';
 
-// POST route to trigger indexing pipeline
+
+/**
+ * Document ID generator that converts GCP URLs to document IDs
+ */
+const gcpURLDocumentIdGenerator: DocumentIdGenerator = (url: string, index: number = 0) => {
+  return url
+    .replace('https://cloud.google.com/', '')
+    .replace(/\//g, '-')
+    .replace(/-+$/, '');
+};
+
+/**
+ * Validates a GCP documentation URL
+ */
+const validateGcpDocUrl: InputURLValidator = (url: string): boolean => {
+  console.log('validating' + url)
+  return url.startsWith('https://cloud.google.com/') &&
+    url !== 'https://cloud.google.com/';
+};
+
+
+// Chunking utility function
+function chunkContent(content: string): string[] {
+  // Implement content chunking logic
+  // This should split the content into appropriate sized chunks
+  return content.split('\n\n').filter(chunk => chunk.trim().length > 0);
+};
+
+/**
+ * Generates chunk IDs combining document ID and chunk index
+ */
+const chunkDocumentIdGenerator: DocumentIdGenerator = (id: string, index: number) => {
+  return `${id}-chunk-${index}`;
+};
+
+/**
+ * Define Document Processor
+ */
+const documentProcessor = new DocumentProcessor();
+
+// /**
+//  * Processes a single document through the scraping pipeline
+//  */
+// async function processDocument(
+//   doc: { id: string; data: DocumentFields },
+// ): Promise<void> {
+//   try {
+//     // Step 1: Update status to processing
+//     await updateDocument<DocumentFields>('documents', doc.id, { status: 'processing' });
+
+//     console.log('uploaded')
+
+//     // Step 2: Scrape document content
+//     const scrapedContent = await scrapeDocument(doc.data.url);
+//     await updateDocument<DocumentFields>('documents', doc.id, { content: scrapedContent });
+
+//     console.log('scraped and updated')
+
+//     // Step 3: Create and store chunks
+//     const chunks = chunkContent(scrapedContent);
+
+//     console.log('chunked')
+
+//     // Prepare chunks with IDs
+//     const chunksWithIds = chunks.map((chunk, index) => ({
+//       id: chunkDocumentIdGenerator(doc.id, index),
+//       content: chunk,
+//       documentId: doc.id,
+//       chunkIndex: index,
+//       totalChunks: chunks.length
+//     }));
+
+//     // Upload chunks
+//     const chunkBatchConfig: BatchConfig<ChunkFields> = {
+//       colId: 'chunks',
+//       batchSize: 500,
+//       baseFields: {
+//         documentId: doc.id,
+//       }
+//     };
+
+//     const chunkUploadResponse = await uploadChunkBatch<ChunkFields>(
+//       chunksWithIds,
+//       chunkBatchConfig
+//     );
+
+//     console.log('chunks uploaded')
+
+//     // Step 4: Generate and store embeddings
+//     // const embeddingService = new EmbeddingService();
+//     const embeddings = await embeddingService.getEmbeddings(chunks);
+
+//     console.log('embeddings generated: ' + embeddings)
+
+//     // const embedddedChunks = embeddContent(content);
+//     // await storeChunkEmbeddings(doc.id, embedddedChunks);
+
+//     // Step 5: Update document status to indexed
+//     await updateDocument<DocumentFields>('documents', doc.id, { status: 'processing' });
+
+//   } catch (error) {
+//     console.error(`Error processing document ${doc.id}:`, error);
+//     await updateDocument<DocumentFields>('documents', doc.id, { status: 'failed' });
+//     throw error;
+//   }
+// }
+
 export async function POST(request: NextRequest) {
-  console.log('Indexing API route called');
-
   try {
     const body = await request.json();
 
@@ -18,67 +130,61 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { urls } = body;
-    console.log('Processing URLs:', urls);
+    const batchConfig: BatchConfig<DocumentFields> = {
+      colId: 'documents',
+      batchSize: 500,
+      baseFields: {
+        status: 'pending' as DocumentStatus
+      }
+    };
 
-    // Validate URLs
-    const invalidUrls = urls.filter(url =>
-      !url.startsWith('https://cloud.google.com/') ||
-      url === 'https://cloud.google.com/'
+
+    // Step 1 & 2: Upload documents to Firestore
+    const uploadResponse: UploadResponse<DocumentFields> = await uploadDocumentBatch<DocumentFields>(
+      // body.urls.map((url: string) => (url)),
+      body.urls,
+      batchConfig,
+      gcpURLDocumentIdGenerator,
+      validateGcpDocUrl
     );
 
-    if (invalidUrls.length > 0) {
+    if (!uploadResponse.success) {
       return NextResponse.json({
         success: false,
-        error: 'Invalid URLs detected',
-        invalidUrls
-      }, { status: 400 });
-    }
-
-    // 1. Convert URLs to document objects & Upload documents to Firestore
-    const documentsToUpload = urls.map(url => ({ url }));
-    const processedDocuments = await uploadDocuments(documentsToUpload);
-    console.log('#### Upload Done ####')
-
-
-    // 2. Start indexing pipeline for each document
-    const indexingPromises = processedDocuments.map(doc =>
-      startIndexingPipeline(doc.id)
-        .catch(error => {
-          console.error(`Error indexing document ${doc.id}:`, error);
-          return error;
-        })
-    );
-    console.log('#### Indexing Done ####')
-
-    // Wait for all indexing operations to complete
-    await Promise.allSettled(indexingPromises);
-
-    return NextResponse.json({
-      success: true,
-      documents: processedDocuments,
-      message: `Successfully processed ${processedDocuments.length} documents`
-    });
-
-  } catch (error) {
-    console.error('Error processing request:', error);
-
-    // Handle specific Firestore upload errors
-    if (error instanceof FirestoreUploadError) {
-      return NextResponse.json({
-        success: false,
-        error: error.message,
-        details: error.details
+        error: uploadResponse.error || 'Failed to upload documents',
+        failedUploads: uploadResponse.failedUploads
       }, { status: 500 });
     }
 
-    // Handle other errors
+    console.log('#### Doc upload done ####')
+
+    // Step 2: Process each document (scrape, chunk, embed)
+    const processingPromises = uploadResponse.documents.map(doc =>
+      documentProcessor.processDocument(doc)
+        .catch(error => {
+          console.error(`Failed to process document ${doc.id}:`, error);
+          return error;
+        })
+    );
+
+    Promise.all(processingPromises);
+
+    return NextResponse.json({
+      success: true,
+      message: `Started processing ${uploadResponse.documents.length} documents`,
+      documents: uploadResponse.documents,
+      failedUploads: uploadResponse.failedUploads
+    });
+
+  } catch (error) {
+    console.error('Error in indexing route:', error);
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Internal server error'
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
+
 
 // GET route to fetch all docs in Firebase Storage
 export async function GET() {

@@ -2,8 +2,8 @@
 import { chromium } from 'playwright';
 import { ChunkingConfig, chunkSection, optimizeChunksForEmbedding } from './chunking';
 import { EmbeddingService } from './embedding';
-import { getAdminDb, collections } from '@/lib/Firebase/FirebaseAdmin';
 import { Timestamp } from 'firebase-admin/firestore';
+import { getDocument } from '@/lib/Firebase/Firestore';
 
 export interface DocumentMetadata {
   title: string;
@@ -180,19 +180,14 @@ export class DocumentProcessor {
 
 // Export a function to start the indexing pipeline
 export async function startIndexingPipeline(documentId: string): Promise<void> {
-  const db = getAdminDb();
-  const docRef = collections.documents(db).doc(documentId);
-  const doc = await docRef.get();
+  const doc = await getDocument("documents", documentId);
 
-  if (!doc.exists) {
-    throw new Error('Document not found');
-  }
+  console.log(doc)
 
-  const data = doc.data();
-  if (!data) {
-    throw new Error('Document data is empty');
+  if (!doc) {
+    throw new Error('Document empty!');
   }
 
   const processor = new DocumentProcessor(process.env.GCP_PROJECT_ID!);
-  await processor.processDocument(documentId, data.url);
+  await processor.processDocument(documentId, doc.url);
 }
