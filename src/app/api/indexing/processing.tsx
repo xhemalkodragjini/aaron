@@ -58,9 +58,7 @@ export class DocumentProcessor {
       // const scrapedContent = await scrapeDocument(doc.data.url);
       const scrapedContent = await docScraper.scrapeUrl(doc.data.url);
 
-      // Clean and validate content immediately after scraping
-      const cleanedContent = this.cleanHtmlContent(scrapedContent);
-      
+
       if (!cleanedContent) {
         throw new ProcessingError('No valid content after cleaning HTML');
       }
@@ -183,35 +181,6 @@ export class DocumentProcessor {
       // Optional: Add a small delay between batches to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-  }
-
-  private cleanHtmlContent(html: string): string {
-    if (!html) return '';
-
-    return html
-      // First remove script tags and their content
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      // Remove style tags and their content
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      // Remove meta tags
-      .replace(/<meta\b[^>]*>/gi, '')
-      // Remove link tags
-      .replace(/<link\b[^>]*>/gi, '')
-      // Remove comments
-      .replace(/<!--[\s\S]*?-->/g, '')
-      // Convert header tags to newlines with text
-      .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, '\n\n$1\n\n')
-      // Convert paragraph tags to newlines with text
-      .replace(/<p[^>]*>(.*?)<\/p>/gi, '\n\n$1\n\n')
-      // Convert breaks to newlines
-      .replace(/<br\s*\/?>/gi, '\n')
-      // Remove all remaining tags
-      .replace(/<[^>]+>/g, ' ')
-      // Fix whitespace
-      .replace(/\s+/g, ' ')
-      // Fix multiple newlines
-      .replace(/\n\s*\n/g, '\n\n')
-      .trim();
   }
 
   /**

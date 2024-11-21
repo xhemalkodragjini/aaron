@@ -38,60 +38,39 @@ export class DocumentScraper {
       .get()
       .join('\n\n');
 
-    return content;
+    // Clean and validate content immediately after scraping
+    const cleanedContent = this.cleanHtmlContent(content);
+
+    return cleanedContent;
   }
 
-  // async scrapeUrl(url: string): Promise<string> {
-  //   const browser = await chromium.launch();
-  //   const page = await browser.newPage();
+  private cleanHtmlContent(html: string): string {
+    if (!html) return '';
 
-  //   // const response = await fetch(url);
-  //   // const html = await response.text();
+    return html
+      // First remove script tags and their content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove style tags and their content
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      // Remove meta tags
+      .replace(/<meta\b[^>]*>/gi, '')
+      // Remove link tags
+      .replace(/<link\b[^>]*>/gi, '')
+      // Remove comments
+      .replace(/<!--[\s\S]*?-->/g, '')
+      // Convert header tags to newlines with text
+      .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, '\n\n$1\n\n')
+      // Convert paragraph tags to newlines with text
+      .replace(/<p[^>]*>(.*?)<\/p>/gi, '\n\n$1\n\n')
+      // Convert breaks to newlines
+      .replace(/<br\s*\/?>/gi, '\n')
+      // Remove all remaining tags
+      .replace(/<[^>]+>/g, ' ')
+      // Fix whitespace
+      .replace(/\s+/g, ' ')
+      // Fix multiple newlines
+      .replace(/\n\s*\n/g, '\n\n')
+      .trim();
+  }
 
-  //   try {
-  //     // await page.goto(url, { waitUntil: 'networkidle' });
-
-  //     const sections = await page.evaluate(() => {
-  //       const sections: string[] = [];
-  //       const body = document.querySelector('.devsite-article-body');
-
-  //       if (!body) return [''];
-
-  //       let paragraphs: string[] = [];
-  //       const processNode = (node: Element) => {
-  //         if (node.tagName === 'P' || node.tagName === 'UL') {
-  //           paragraphs.push(node.textContent?.trim() || '');
-  //         }
-  //       };
-
-  //       // Process first section before any h2
-  //       let currentNode = body.firstElementChild;
-  //       while (currentNode && currentNode.tagName !== 'H2') {
-  //         processNode(currentNode);
-  //         currentNode = currentNode.nextElementSibling;
-  //       }
-  //       sections.push(paragraphs.join(' '));
-
-  //       // Process each h2 section
-  //       const h2Elements = body.querySelectorAll('h2');
-  //       h2Elements.forEach(h2 => {
-  //         paragraphs = [];
-  //         let nextNode = h2.nextElementSibling;
-
-  //         while (nextNode && nextNode.tagName !== 'H2') {
-  //           processNode(nextNode);
-  //           nextNode = nextNode.nextElementSibling;
-  //         }
-
-  //         sections.push(paragraphs.join(' '));
-  //       });
-
-  //       return sections;
-  //     });
-
-  //     return sections.join('\n');
-  //   } finally {
-  //     await browser.close();
-  //   }
-  // }
 }
