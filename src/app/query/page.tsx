@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DocumentationStatus } from '@/app/components/QueryPanel/DocumentationStatus';
 import { InstructionsPanel } from '@/app/components/QueryPanel/InstructionsPanel';
 import { TranscriptInput } from '@/app/components/QueryPanel/TranscriptInput';
@@ -22,54 +22,71 @@ interface Document {
 }
 
 const QueryPanelPage = () => {
-  const [transcript, setTranscript] = React.useState('');
-  const [generatedEmail, setGeneratedEmail] = React.useState('');
-  const [isLoadingDocs, setIsLoadingDocs] = React.useState(true);
-  const [documents, setDocuments] = React.useState<Document[]>([]);
-  const [state, setState] = React.useState<EmailGenerationState>({
+  const [transcript, setTranscript] = useState('');
+  const [generatedEmail, setGeneratedEmail] = useState('');
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<EmailGenerationState>({
     isProcessing: false,
     showSuccess: false,
     copySuccess: false,
   });
+  const [indexingStatus, setIndexingStatus] = useState<'idle' | 'running' | 'error' | 'success'>('idle');
 
-  // Simulate loading documents
-  React.useEffect(() => {
-    const loadDocuments = async () => {
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Sample data - this would come from your API
-        const sampleDocs: Document[] = [
-          {
-            id: '1',
-            url: 'https://cloud.google.com/compute/docs/instances',
-            indexedAt: new Date().toISOString(),
-            status: 'indexed'
-          },
-          {
-            id: '2',
-            url: 'https://cloud.google.com/storage/docs/introduction',
-            indexedAt: new Date().toISOString(),
-            status: 'indexed'
-          },
-          {
-            id: '3',
-            url: 'https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture',
-            indexedAt: new Date().toISOString(),
-            status: 'pending'
-          }
-        ];
-        
-        setDocuments(sampleDocs);
-      } catch (error) {
-        console.error('Error loading documents:', error);
-      } finally {
-        setIsLoadingDocs(false);
+  const refreshDocuments = async () => {
+    try {
+      setIsLoadingDocs(true);
+      setError(null);
+      setIndexingStatus('running');
+      
+      const response = await fetch('/api/indexing');
+      if (!response.ok) {
+        throw new Error('Failed to fetch documents');
       }
-    };
+      
+      const data = await response.json();
+      
+      if (data.documents && Array.isArray(data.documents)) {
+        setDocuments(data.documents);
+        setIndexingStatus('success');
+        
+        // Update indexing status based on documents state
+        const hasFailedDocs = data.documents.some((doc: Document) => doc.status === 'failed');
+        const hasPendingDocs = data.documents.some((doc: Document) => doc.status === 'pending');
+        
+        if (hasFailedDocs) {
+          setIndexingStatus('error');
+        } else if (hasPendingDocs) {
+          setIndexingStatus('running');
+        } else {
+          setIndexingStatus('success');
+        }
+      } else {
+        throw new Error('Invalid document data received');
+      }
+    } catch (error) {
+      console.error('Error refreshing documents:', error);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      setIndexingStatus('error');
+    } finally {
+      setIsLoadingDocs(false);
+    }
+  };
 
-    loadDocuments();
+  // Initial load effect
+  useEffect(() => {
+    refreshDocuments();
+    
+    // Set up polling for document updates if there are pending documents
+    const pollingInterval = setInterval(() => {
+      if (documents.some(doc => doc.status === 'pending')) {
+        refreshDocuments();
+      }
+    }, 5000); // Poll every 5 seconds if there are pending documents
+
+    // Cleanup polling on component unmount
+    return () => clearInterval(pollingInterval);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,21 +94,27 @@ const QueryPanelPage = () => {
     setState(prev => ({ ...prev, isProcessing: true }));
     
     try {
-      // This will be replaced with actual API call to the RAG backend
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setGeneratedEmail(`Dear Customer,
+      // API call to the RAG backend will go here
+      const response = await fetch('/api/generate-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transcript }),
+      });
 
-Thank you for our discussion today regarding your GCP infrastructure requirements.
+      if (!response.ok) {
+        throw new Error('Failed to generate email');
+      }
 
-[Generated email content will appear here]
-
-Best regards,
-Your CE`);
+      const data = await response.json();
+      setGeneratedEmail(data.email);
       
       setState(prev => ({ ...prev, showSuccess: true }));
       setTimeout(() => setState(prev => ({ ...prev, showSuccess: false })), 3000);
     } catch (error) {
       console.error('Error generating email:', error);
+      setError(error instanceof Error ? error.message : 'Failed to generate email');
     } finally {
       setState(prev => ({ ...prev, isProcessing: false }));
     }
@@ -109,7 +132,11 @@ Your CE`);
         {/* Header and Documentation Status */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">CE Intern</h1>
-          {/* <DocumentationStatus /> */}
+          <DocumentationStatus 
+            status={indexingStatus}
+            error={error}
+            onRetry={refreshDocuments}
+          />
         </div>
 
         {/* Instructions */}
@@ -117,7 +144,6 @@ Your CE`);
 
         {/* Main Content */}
         <div className="flex gap-6 flex-col md:flex-row">
-          {/* Input Section */}
           <TranscriptInput
             transcript={transcript}
             onTranscriptChange={setTranscript}
@@ -125,7 +151,6 @@ Your CE`);
             isProcessing={state.isProcessing}
           />
 
-          {/* Output Section */}
           <EmailOutput
             generatedEmail={generatedEmail}
             onRegenerate={handleSubmit}
