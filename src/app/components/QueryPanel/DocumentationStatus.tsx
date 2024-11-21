@@ -19,16 +19,6 @@ export const DocumentationStatus: React.FC<DocumentationStatusProps> = ({
           Active and Up-to-date
         </span>
       </div>
-      
-      <a 
-        href={documentationUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
-      >
-        View Indexed Documentation 
-        <ExternalLink className="w-3 h-3" />
-      </a>
     </div>
   );
 };
