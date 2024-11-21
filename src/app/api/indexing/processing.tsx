@@ -20,6 +20,7 @@ import {
 
 import { DocumentScraper } from '@/app/api/indexing/scraping'
 
+
 export class ProcessingError extends Error {
   constructor(message: string, public details?: any) {
     super(message);
@@ -27,17 +28,8 @@ export class ProcessingError extends Error {
   }
 }
 
-// // Scraping utility function
-// async function scrapeDocument(url: string): Promise<string> {
-//   // Implement web scraping logic here
-//   // This should fetch and parse the GCP documentation page
-//   const response = await fetch(url);
-//   const html = await response.text();
-//   // Add HTML parsing logic here
-//   return html;
-// };
-
 const docScraper = new DocumentScraper();
+
 
 const generateChunkId: DocumentIdGenerator = (documentId: string, chunkIndex: number) => {
   return `${documentId}-chunk-${chunkIndex}`;
