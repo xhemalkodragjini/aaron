@@ -1,5 +1,4 @@
 "use client"
-
 import React, { useState, useEffect } from 'react';
 import { DocumentationStatus } from '@/app/components/QueryPanel/DocumentationStatus';
 import { InstructionsPanel } from '@/app/components/QueryPanel/InstructionsPanel';
@@ -7,6 +6,25 @@ import { TranscriptInput } from '@/app/components/QueryPanel/TranscriptInput';
 import { EmailOutput } from '@/app/components/QueryPanel/EmailOutput';
 import { InfoFooter } from '@/app/components/QueryPanel/InfoFooter';
 import { DocumentList, DocumentListSkeleton } from '@/app/components/QueryPanel/DocumentList';
+
+// Types for the transcript processing response
+interface Task {
+  description: string;
+  context: string;
+}
+
+interface ResearchResult {
+  answer: string;
+  steps: string[];
+  caveats: string[];
+  docReferences: Array<{ title: string; url: string }>;
+}
+
+interface ProcessingResponse {
+  tasks: Task[];
+  research: ResearchResult[];
+  email: string;
+}
 
 export interface EmailGenerationState {
   isProcessing: boolean;
@@ -22,8 +40,10 @@ interface Document {
 }
 
 const QueryPanelPage = () => {
+  // State management
   const [transcript, setTranscript] = useState('');
   const [generatedEmail, setGeneratedEmail] = useState('');
+  const [processingError, setProcessingError] = useState<string | null>(null);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +54,7 @@ const QueryPanelPage = () => {
   });
   const [indexingStatus, setIndexingStatus] = useState<'idle' | 'running' | 'error' | 'success'>('idle');
 
+  // Document refresh logic
   const refreshDocuments = async () => {
     try {
       setIsLoadingDocs(true);
@@ -49,7 +70,6 @@ const QueryPanelPage = () => {
       
       if (data.documents && Array.isArray(data.documents)) {
         setDocuments(data.documents);
-        setIndexingStatus('success');
         
         // Update indexing status based on documents state
         const hasFailedDocs = data.documents.some((doc: Document) => doc.status === 'failed');
@@ -83,19 +103,21 @@ const QueryPanelPage = () => {
       if (documents.some(doc => doc.status === 'pending')) {
         refreshDocuments();
       }
-    }, 5000); // Poll every 5 seconds if there are pending documents
+    }, 5000);
 
-    // Cleanup polling on component unmount
     return () => clearInterval(pollingInterval);
   }, []);
 
+  // Handle transcript submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!transcript.trim()) return;
+
     setState(prev => ({ ...prev, isProcessing: true }));
+    setProcessingError(null);
     
     try {
-      // API call to the RAG backend will go here
-      const response = await fetch('/api/generate-email', {
+      const response = await fetch('/api/process-transcript', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,22 +126,33 @@ const QueryPanelPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate email');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process transcript');
       }
 
       const data = await response.json();
-      setGeneratedEmail(data.email);
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to process transcript');
+      }
+
+      const result = data.data as ProcessingResponse;
       
+      // Set the generated email
+      setGeneratedEmail(result.email);
+      
+      // Show success message
       setState(prev => ({ ...prev, showSuccess: true }));
       setTimeout(() => setState(prev => ({ ...prev, showSuccess: false })), 3000);
+
     } catch (error) {
-      console.error('Error generating email:', error);
-      setError(error instanceof Error ? error.message : 'Failed to generate email');
+      console.error('Error processing transcript:', error);
+      setProcessingError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setState(prev => ({ ...prev, isProcessing: false }));
     }
   };
 
+  // Handle email copy
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(generatedEmail);
     setState(prev => ({ ...prev, copySuccess: true }));
@@ -157,6 +190,7 @@ const QueryPanelPage = () => {
             onCopy={handleCopyEmail}
             showSuccess={state.showSuccess}
             copySuccess={state.copySuccess}
+            error={processingError}
           />
         </div>
 

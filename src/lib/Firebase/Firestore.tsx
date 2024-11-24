@@ -27,7 +27,7 @@ import {
   FailedUpload
 } from './types';
 
-import { FieldValue, Firestore } from "@google-cloud/firestore";
+import { Firestore } from "@google-cloud/firestore";
 
 /**
  * Fetches all documents from a specified collection

@@ -1,10 +1,10 @@
 import React from 'react';
-import { Settings, MessageSquare } from 'lucide-react';
+import { Settings, MessageSquare, Search } from 'lucide-react';
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 py-16">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">CE Intern</h1>
@@ -14,7 +14,7 @@ const LandingPage = () => {
         </div>
 
         {/* Navigation Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {/* Query Panel Card */}
           <div className="bg-white rounded-lg shadow-md group hover:shadow-lg transition-shadow duration-300">
             <a href="/query" className="block h-full p-6">
@@ -50,6 +50,26 @@ const LandingPage = () => {
                   <li>Monitor indexing status</li>
                   <li>Add documentation URLs</li>
                   <li>Track indexed documents</li>
+                </ul>
+              </div>
+            </a>
+          </div>
+
+          {/* Search Panel Card */}
+          <div className="bg-white rounded-lg shadow-md group hover:shadow-lg transition-shadow duration-300">
+            <a href="/search" className="block h-full p-6">
+              <div className="text-center">
+                <div className="mx-auto mb-4 p-4 bg-green-100 rounded-full w-16 h-16 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                  <Search className="w-8 h-8 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-semibold mb-2">Search Panel</h2>
+                <p className="text-gray-500 mb-4">
+                  Search through indexed GCP documentation
+                </p>
+                <ul className="text-gray-600 space-y-2">
+                  <li>Semantic search capabilities</li>
+                  <li>Find relevant documentation</li>
+                  <li>Access technical resources</li>
                 </ul>
               </div>
             </a>

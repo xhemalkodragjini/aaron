@@ -1,5 +1,5 @@
 // src/app/api/indexing/[id]/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/Firebase/FirebaseConfig';
 import { 
     collection, 
@@ -51,10 +51,11 @@ async function deleteInBatches(chunksToDelete: DocumentReference[], documentRef:
 }
 
 export async function DELETE(
-    request: Request,
+    request: NextRequest,
     context: { params: { id: string } }
-) {
+  ) {
     const { id } = await context.params;
+    const { req } = await request.body 
 
     if (!id) {
         return NextResponse.json(
@@ -95,35 +96,9 @@ export async function DELETE(
             { 
                 success: false, 
                 error: error instanceof Error ? error.message : 'Unknown error',
-                code: error?.code
+                // code: error?.code
             },
             { status: 500 }
         );
     }
 }
-
-// src/app/api/indexing/[id]/reindex/route.ts
-// import { startIndexingPipeline } from '../../indexing';
-
-// export async function POST(
-//     request: Request,
-//     { params }: { params: { id: string } }
-// ) {
-//     if (!params.id) {
-//         return NextResponse.json(
-//             { success: false, error: 'Document ID is required' },
-//             { status: 400 }
-//         );
-//     }
-
-//     try {
-//         await startIndexingPipeline(params.id);
-//         return NextResponse.json({ success: true });
-//     } catch (error) {
-//         console.error('Error reindexing document:', error);
-//         return NextResponse.json(
-//             { success: false, error: error.message },
-//             { status: 500 }
-//         );
-//     }
-// }

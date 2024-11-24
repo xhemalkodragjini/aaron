@@ -1,4 +1,4 @@
-// src/app/api/test/vector-search/route.ts
+// src/app/api/test-vectorsearch/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import {
   Firestore,
@@ -37,17 +37,18 @@ export async function POST(request: NextRequest) {
 
     // Generate embedding for the query text
 
-    console.log("NL Query: " + body.query)
+    console.log("NL Query running through vectsearch: " + body.query)
     const queryEmbeddings = await embeddingService.getEmbeddings([body.query]);
 
     const queryVector = queryEmbeddings[0];
-
+    
     // Configure vector search query
     const vectorQuery: VectorQuery = chunksCollection.findNearest({
       queryVector: queryVector,
       vectorField: 'embedding',
       limit: body.limit || 10,
-      distanceMeasure: 'EUCLIDEAN'
+      distanceMeasure: 'COSINE',
+      // distanceThreshold: .5
     });
 
     // Execute search
@@ -63,6 +64,8 @@ export async function POST(request: NextRequest) {
         score: data.score
       };
     });
+
+    console.log('query results: ' + results.length + ' results: ' + results)
 
     // Filter results by threshold if specified
     const filteredResults = body.threshold

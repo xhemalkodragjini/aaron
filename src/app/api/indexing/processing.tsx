@@ -19,6 +19,7 @@ import {
 } from "@google-cloud/firestore";
 
 import { DocumentScraper } from '@/app/api/indexing/scraping'
+import { DocumentChunker } from '@/app/api/indexing/chunking'
 
 
 export class ProcessingError extends Error {
@@ -29,6 +30,8 @@ export class ProcessingError extends Error {
 }
 
 const docScraper = new DocumentScraper();
+
+const docChunker = new DocumentChunker();
 
 
 const generateChunkId: DocumentIdGenerator = (documentId: string, chunkIndex: number) => {
@@ -58,20 +61,20 @@ export class DocumentProcessor {
       // const scrapedContent = await scrapeDocument(doc.data.url);
       const scrapedContent = await docScraper.scrapeUrl(doc.data.url);
 
-
-      if (!cleanedContent) {
-        throw new ProcessingError('No valid content after cleaning HTML');
+      if (!scrapedContent) {
+        throw new ProcessingError('No valid content after scraping and cleaning HTML');
       }
 
       await updateDocument<DocumentFields>('documents', doc.id, {
-        content: cleanedContent
+        content: scrapedContent
       });
 
       console.log('#### Scraped and stored ####')
 
       // Step 3: Create chunks from content
       console.log('🟦 Creating chunks from content...');
-      const chunks = this.createChunks(scrapedContent);
+      // const chunks = this.createChunks(scrapedContent);
+      const chunks =  await docChunker.chunkText(scrapedContent);
       console.log(`🟦 Created ${chunks.length} chunks`);
       if (chunks.length > 0) {
         console.log('🟦 Sample chunk sizes:', chunks.slice(0, 3).map(chunk => chunk.length));
