@@ -7,7 +7,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 // Base model configuration
 export const createGeminiTextModel = (temperature = 1, maxOutputTokens = 8192) => {
   return new VertexAI({
-    modelName: "gemini-1.5-pro-002",
+    modelName: "gemini-2.0-flash-exp",
     temperature,
     maxOutputTokens,
   });

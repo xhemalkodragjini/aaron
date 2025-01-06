@@ -6,6 +6,7 @@ import { TranscriptInput } from '@/app/components/QueryPanel/TranscriptInput';
 import { EmailOutput } from '@/app/components/QueryPanel/EmailOutput';
 import { InfoFooter } from '@/app/components/QueryPanel/InfoFooter';
 import { DocumentList, DocumentListSkeleton } from '@/app/components/QueryPanel/DocumentList';
+import { GreetingHeader } from '@/app/components/QueryPanel/GreetingHeader'
 
 // Types for the transcript processing response
 interface Task {
@@ -60,21 +61,21 @@ const QueryPanelPage = () => {
       setIsLoadingDocs(true);
       setError(null);
       setIndexingStatus('running');
-      
+
       const response = await fetch('/api/indexing');
       if (!response.ok) {
         throw new Error('Failed to fetch documents');
       }
-      
+
       const data = await response.json();
-      
+
       if (data.documents && Array.isArray(data.documents)) {
         setDocuments(data.documents);
-        
+
         // Update indexing status based on documents state
         const hasFailedDocs = data.documents.some((doc: Document) => doc.status === 'failed');
         const hasPendingDocs = data.documents.some((doc: Document) => doc.status === 'pending');
-        
+
         if (hasFailedDocs) {
           setIndexingStatus('error');
         } else if (hasPendingDocs) {
@@ -97,7 +98,7 @@ const QueryPanelPage = () => {
   // Initial load effect
   useEffect(() => {
     refreshDocuments();
-    
+
     // Set up polling for document updates if there are pending documents
     const pollingInterval = setInterval(() => {
       if (documents.some(doc => doc.status === 'pending')) {
@@ -115,7 +116,7 @@ const QueryPanelPage = () => {
 
     setState(prev => ({ ...prev, isProcessing: true }));
     setProcessingError(null);
-    
+
     try {
       const response = await fetch('/api/process-transcript', {
         method: 'POST',
@@ -136,10 +137,10 @@ const QueryPanelPage = () => {
       }
 
       const result = data.data as ProcessingResponse;
-      
+
       // Set the generated email
       setGeneratedEmail(result.email);
-      
+
       // Show success message
       setState(prev => ({ ...prev, showSuccess: true }));
       setTimeout(() => setState(prev => ({ ...prev, showSuccess: false })), 3000);
@@ -164,8 +165,8 @@ const QueryPanelPage = () => {
       <div className="max-w-7xl mx-auto px-4">
         {/* Header and Documentation Status */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">CE Intern</h1>
-          <DocumentationStatus 
+          <GreetingHeader />
+          <DocumentationStatus
             status={indexingStatus}
             error={error}
             onRetry={refreshDocuments}

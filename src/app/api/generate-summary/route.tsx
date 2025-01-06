@@ -5,7 +5,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 
 // Initialize Vertex AI Model
 const model = new VertexAI({
-  model: "gemini-1.5-pro-002", 
+  model: "gemini-2.0-flash-exp", 
   temperature: .3,
   maxOutputTokens: 1024,
   // project: process.env.GCP_PROJECT_ID,
