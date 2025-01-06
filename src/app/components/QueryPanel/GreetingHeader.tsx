@@ -12,7 +12,7 @@ export const GreetingHeader = () => {
           alt="Aaron the intern" 
           className="w-12 h-12 transition-transform transform group-hover:scale-110"
         />
-        <span className="absolute -top-1 -right-1 text-2xl animate-bounce group-hover:animate-none">
+        <span className="absolute -top-1 -right-1 text-1xl animate-bounce group-hover:animate-none">
           💧
         </span>
       </div>
