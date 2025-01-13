@@ -3,13 +3,13 @@
 // import { VertexAIEmbeddings } from "langchain/embeddings/googlevertexai";
 import { VertexAI } from "@langchain/google-vertexai";
 import { PromptTemplate } from "@langchain/core/prompts";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 // Base model configuration
 export const createGeminiTextModel = (temperature = 1, maxOutputTokens = 8192) => {
-  return new VertexAI({
-    modelName: "gemini-2.0-flash-exp",
-    temperature,
-    maxOutputTokens,
+  return new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash-exp",
   });
 };
 

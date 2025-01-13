@@ -1,16 +1,7 @@
 // app/api/generate-summary/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { VertexAI } from "@langchain/google-vertexai";
 import { PromptTemplate } from "@langchain/core/prompts";
-
-// Initialize Vertex AI Model
-const model = new VertexAI({
-  model: "gemini-2.0-flash-exp", 
-  temperature: .3,
-  maxOutputTokens: 1024,
-  // project: process.env.GCP_PROJECT_ID,
-  location: process.env.GOOGLE_CLOUD_LOCATION || "europe-west1",
-});
+import { geminiService } from '@/lib/google-ai-studio/gemini';
 
 // Create the RAG-aware summary prompt template
 const summaryPrompt = PromptTemplate.fromTemplate(`
@@ -74,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Call the model
     console.log('Sending prompt to Vertex AI:', formattedPrompt);
-    const result = await model.invoke(formattedPrompt);
+    const result = await geminiService.generateContent(formattedPrompt);
     console.log('Received result from Vertex AI:', result);
 
     return NextResponse.json({ 

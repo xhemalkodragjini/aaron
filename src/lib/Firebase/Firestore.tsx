@@ -420,7 +420,14 @@ export async function batchUpdateDocuments<T extends ChunkFields>(
   batchSize: number = 500
 ): Promise<boolean> {
 
-  const db = new Firestore();
+  const db = new Firestore({
+    projectId:"poerschmann-ce-intern",
+    // keyFilename: "poerschmann-ce-intern-firebase-adminsdk-laexk-33fb4db8dc.json",
+    credentials: {
+      client_email: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+      private_key: process.env.FIREBASE_ADMIN_PRIVATE_KEY}
+  });
+  console.log("Firestore Instance: ", db)
 
   try {
     for (let i = 0; i < updatedRecordsArr.length; i += batchSize) {

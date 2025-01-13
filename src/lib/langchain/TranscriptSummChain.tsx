@@ -123,7 +123,7 @@ ${chunk.content}
           task: (input: any) => input.task,
           context: (input: any) => input.context,
           format_instructions: () => researchParser.getFormatInstructions(),
-          sources: (input: any) => input.sources,
+          // sources: (input: any) => input.sources,
         },
         PROMPT_TEMPLATES.research,
         model,
@@ -133,11 +133,11 @@ ${chunk.content}
       const result = await chain.invoke({
         task: task.description,
         context: formattedContext,
-        sources: documentChunks.map((chunk, index) => ({
-          id: index + 1,
-          title: chunk.title || 'GCP Documentation',
-          url: chunk.url,
-        })),
+        // sources: documentChunks.map((chunk, index) => ({
+        //   id: index + 1,
+        //   title: chunk.title || 'GCP Documentation',
+        //   url: chunk.url,
+        // })),
       },
       { callbacks: [langfuseHandler] }
       );
@@ -240,7 +240,7 @@ export async function processTranscript(transcript: string) {
     return {
       tasks,
       research: researchResults,
-      email: email,
+      email: email.content,
     };
 
   } catch (error) {
