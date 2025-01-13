@@ -50,6 +50,8 @@ export class EmbeddingService {
       embeddings.push(...batchEmbeddings);
     }
 
+    
+
     return embeddings;
   }
 

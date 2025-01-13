@@ -43,7 +43,7 @@ const StatusOverview: React.FC<StatusOverviewProps> = ({
       </div>
     </StatusCard>
 
-    <StatusCard icon={Link} title="Quick Actions">
+    {/* <StatusCard icon={Link} title="Quick Actions">
       <button
         onClick={onStartIndexing}
         disabled={isIndexing}
@@ -61,7 +61,7 @@ const StatusOverview: React.FC<StatusOverviewProps> = ({
           </>
         )}
       </button>
-    </StatusCard>
+    </StatusCard> */}
   </div>
 );
 
