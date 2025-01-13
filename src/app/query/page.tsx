@@ -1,3 +1,4 @@
+// src/app/query/page.tsx
 "use client"
 import React, { useState, useEffect } from 'react';
 import { DocumentationStatus } from '@/app/components/QueryPanel/DocumentationStatus';
@@ -7,6 +8,7 @@ import { EmailOutput } from '@/app/components/QueryPanel/EmailOutput';
 import { InfoFooter } from '@/app/components/QueryPanel/InfoFooter';
 import { DocumentList, DocumentListSkeleton } from '@/app/components/QueryPanel/DocumentList';
 import { GreetingHeader } from '@/app/components/QueryPanel/GreetingHeader'
+import ResearchTopics from '../components/QueryPanel/ResearchTopicResults';
 
 // Types for the transcript processing response
 interface Task {
@@ -55,6 +57,14 @@ const QueryPanelPage = () => {
   });
   const [indexingStatus, setIndexingStatus] = useState<'idle' | 'running' | 'error' | 'success'>('idle');
 
+  const [researchData, setResearchData] = useState<{
+    tasks: Task[];
+    research: ResearchResult[];
+  }>({
+    tasks: [],
+    research: []
+  });
+
   // Document refresh logic
   const refreshDocuments = async () => {
     try {
@@ -98,18 +108,15 @@ const QueryPanelPage = () => {
   // Initial load effect
   useEffect(() => {
     refreshDocuments();
-
-    // Set up polling for document updates if there are pending documents
     const pollingInterval = setInterval(() => {
       if (documents.some(doc => doc.status === 'pending')) {
         refreshDocuments();
       }
     }, 5000);
-
     return () => clearInterval(pollingInterval);
   }, []);
 
-  // Handle transcript submission
+  // Modified handleSubmit to store research data
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!transcript.trim()) return;
@@ -138,8 +145,12 @@ const QueryPanelPage = () => {
 
       const result = data.data as ProcessingResponse;
 
-      // Set the generated email
+      // Set both email and research data
       setGeneratedEmail(result.email);
+      setResearchData({
+        tasks: result.tasks,
+        research: result.research
+      });
 
       // Show success message
       setState(prev => ({ ...prev, showSuccess: true }));
@@ -153,7 +164,7 @@ const QueryPanelPage = () => {
     }
   };
 
-  // Handle email copy
+  // Handle email copy remains the same...
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(generatedEmail);
     setState(prev => ({ ...prev, copySuccess: true }));
@@ -176,15 +187,24 @@ const QueryPanelPage = () => {
         {/* Instructions */}
         <InstructionsPanel />
 
-        {/* Main Content */}
-        <div className="flex gap-6 flex-col md:flex-row">
+        {/* Input Row */}
+        <div className="mb-6">
           <TranscriptInput
             transcript={transcript}
             onTranscriptChange={setTranscript}
             onSubmit={handleSubmit}
             isProcessing={state.isProcessing}
           />
+        </div>
 
+        {/* Research and Output Row */}
+        <div className="flex gap-6 mb-8">
+          <ResearchTopics
+            tasks={researchData.tasks}
+            research={researchData.research}
+            isLoading={state.isProcessing}
+          />
+          
           <EmailOutput
             generatedEmail={generatedEmail}
             onRegenerate={handleSubmit}
