@@ -29,7 +29,7 @@ const ResearchTopics: React.FC<ResearchTopicsProps> = ({ tasks, research, isLoad
 
   if (isLoading) {
     return (
-      <div className="flex-1 max-w-xl">
+      <div className="flex-1  w-full">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">Analyzing Topics...</h2>
           <div className="animate-pulse space-y-4">
@@ -44,7 +44,7 @@ const ResearchTopics: React.FC<ResearchTopicsProps> = ({ tasks, research, isLoad
 
   if (!tasks.length) {
     return (
-      <div className="flex-1 max-w-xl">
+      <div className="flex-1  w-full">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">Research Topics</h2>
           <p className="text-gray-600">
@@ -56,7 +56,7 @@ const ResearchTopics: React.FC<ResearchTopicsProps> = ({ tasks, research, isLoad
   }
 
   return (
-    <div className="flex-1 max-w-xl">
+    <div className="flex-1  w-full">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Research Topics</h2>
         <div className="space-y-4">
