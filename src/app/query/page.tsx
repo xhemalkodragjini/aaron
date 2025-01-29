@@ -106,7 +106,7 @@ const QueryPanelPage = () => {
   };
 
   // Initial load effect
-  useEffect(() => {
+    useEffect(() => {
     refreshDocuments();
     const pollingInterval = setInterval(() => {
       if (documents.some(doc => doc.status === 'pending')) {
@@ -197,14 +197,16 @@ const QueryPanelPage = () => {
           />
         </div>
 
-        {/* Research and Output Row */}
-        <div className="flex gap-6 mb-8">
+        <div className="mb-6 w-full">
           <ResearchTopics
             tasks={researchData.tasks}
             research={researchData.research}
             isLoading={state.isProcessing}
           />
-          
+        </div>
+
+        {/* Research and Output Row */}
+        <div className="mb-6">
           <EmailOutput
             generatedEmail={generatedEmail}
             onRegenerate={handleSubmit}
