@@ -15,7 +15,6 @@ const langfuseHandler = new CallbackHandler({
 // Types for structured output
 interface Task {
   description: string;
-  context: string;
 }
 
 // Enhanced research result interface with source documentation
@@ -42,7 +41,6 @@ interface DocumentChunk {
 export const createTaskExtractionChain = () => {
   const taskParser = StructuredOutputParser.fromZodSchema(z.array(z.object({
     description: z.string(),
-    context: z.string()
   })));
 
   const model = createGeminiTextModel(0.2);
