@@ -138,7 +138,7 @@ const AdminPanel = () => {
       
       const data = await response.json();
       setDocuments(data.documents);
-      setIndexedDocsCount(data.documents.filter(doc => doc.status === 'indexed').length);
+      setIndexedDocsCount(data.documents.filter((doc: Document) => doc.status === 'indexed').length);
     } catch (error) {
       console.error('Error refreshing documents:', error);
     }

@@ -54,7 +54,7 @@ export class DocumentProcessor {
       // Step 1: Update status to processing
       await updateDocument<DocumentFields>('documents', doc.id, {
         status: 'processing',
-        error: null
+        error: undefined
       });
 
       // Step 2: Scrape document content
@@ -100,7 +100,7 @@ export class DocumentProcessor {
         batchSize: 500,
         baseFields: {
           documentId: doc.id,
-          embedding: [] // Empty initially
+          embedding: FieldValue.vector([])
         }
       };
 

@@ -4,7 +4,6 @@ import { db } from '@/lib/Firebase/FirebaseConfig';
 import { 
   collection, 
   doc,
-  setDoc,
   getDocs,
   query,
   where,
@@ -12,7 +11,6 @@ import {
   serverTimestamp,
   getDoc,
   Timestamp,
-  deleteDoc
 } from 'firebase/firestore';
 
 interface DocumentToUpload {

@@ -52,10 +52,10 @@ async function deleteInBatches(chunksToDelete: DocumentReference[], documentRef:
 
 export async function DELETE(
     request: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
   ) {
-    const { id } = await context.params;
-    const { req } = await request.body 
+    const params = await context.params;
+    const id = params.id
 
     if (!id) {
         return NextResponse.json(

@@ -136,7 +136,7 @@ export async function uploadDocument<T extends BaseFields>(
       };
     }
 
-    const documentId = generateId(url);
+    const documentId = generateId(url, 0);
     const docRef = doc(db, colId, documentId);
 
     const timestamp = Timestamp.now();
@@ -202,7 +202,8 @@ export async function uploadDocumentBatch<T extends DocumentFields>(
 
       for (const url of batchUrls) {
         const documentId = generateId(url, 0);
-        const docRef = doc(db, colId, documentId);
+        const collectionId = colId || 'documents';
+        const docRef = doc(db, collectionId, documentId);
 
         const documentData = {
           url: url,
@@ -267,7 +268,7 @@ export async function uploadChunkBatch<T extends ChunkFields>(
   } = config;
 
   const processedItems: Array<{ id: string; data: T }> = [];
-  const failedItems: Array<{ item: any; error: string }> = [];
+  const failedItems: Array<{ url: string; error: string }> = [];
   const timestamp = Timestamp.now();
 
   try {
@@ -320,11 +321,11 @@ export async function uploadChunkBatch<T extends ChunkFields>(
           processedItems.push({ id: item.chunkId, data: docData });
         } catch (itemError) {
           console.error(`🔴 Error processing chunk:`, {
-            error: itemError.message,
+            error: itemError instanceof Error ? itemError.message : String(itemError),
             chunkId: item.chunkId
           });
           failedItems.push({
-            item,
+            url: item.chunkId,
             error: itemError instanceof Error ? itemError.message : 'Failed to process item'
           });
         }
@@ -336,12 +337,12 @@ export async function uploadChunkBatch<T extends ChunkFields>(
         console.log(`🟢 Successfully committed batch ${Math.floor(i / batchSize) + 1}`);
       } catch (batchError) {
         console.error('🔴 Batch commit failed:', {
-          error: batchError.message,
+          error: batchError instanceof Error ? batchError.message : String(batchError),
           batchNumber: Math.floor(i / batchSize) + 1
         });
         currentBatch.forEach(item => {
           failedItems.push({
-            item,
+            url: item.chunkId,
             error: batchError instanceof Error ? batchError.message : 'Batch commit failed'
           });
         });

@@ -5,10 +5,11 @@ import { Copy, RefreshCw, CheckCircle2 } from 'lucide-react';
 
 interface EmailOutputProps {
   generatedEmail: string;
-  onRegenerate: (e: { preventDefault: () => void }) => void;
+  onRegenerate: (e: React.FormEvent) => void;
   onCopy: () => void;
   showSuccess: boolean;
   copySuccess: boolean;
+  error: string | null; 
 }
 
 export const EmailOutput: React.FC<EmailOutputProps> = ({
@@ -26,7 +27,7 @@ export const EmailOutput: React.FC<EmailOutputProps> = ({
           {generatedEmail && (
             <div className="flex gap-2">
               <button
-                onClick={() => onRegenerate({ preventDefault: () => {} })}
+                onClick={onRegenerate}
                 className="flex items-center gap-1 text-gray-500 hover:text-gray-700"
                 title="Generate a new version with the same transcript"
               >

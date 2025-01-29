@@ -58,7 +58,7 @@ export class VectorSearchUtil {
   private async fetchDocumentDetails(documentId: string) {
     try {
       const doc = await getDocument('documents', documentId);
-      if (!doc) {
+      if ('status' in doc || !doc) { // Check if it's a NextResponse or null
         console.warn(`Document not found for id: ${documentId}`);
         return null;
       }

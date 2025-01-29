@@ -1,7 +1,6 @@
 // src/app/query/page.tsx
 "use client"
 import React, { useState, useEffect } from 'react';
-import { DocumentationStatus } from '@/app/components/QueryPanel/DocumentationStatus';
 import { InstructionsPanel } from '@/app/components/QueryPanel/InstructionsPanel';
 import { TranscriptInput } from '@/app/components/QueryPanel/TranscriptInput';
 import { EmailOutput } from '@/app/components/QueryPanel/EmailOutput';
@@ -177,11 +176,6 @@ const QueryPanelPage = () => {
         {/* Header and Documentation Status */}
         <div className="mb-8">
           <GreetingHeader />
-          <DocumentationStatus
-            status={indexingStatus}
-            error={error}
-            onRetry={refreshDocuments}
-          />
         </div>
 
         {/* Instructions */}
