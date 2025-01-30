@@ -23,6 +23,7 @@ export interface DocumentFields extends BaseFields {
     url: string;
     status: DocumentStatus;
     content?: string;
+    rawHTML?: string;
     indexedAt: null | Timestamp;
     error?: string;
 }

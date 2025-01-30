@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
       }
     };
 
-
     // Step 1 & 2: Upload documents to Firestore
     const uploadResponse: UploadResponse<DocumentFields> = await uploadDocumentBatch<DocumentFields>(
       // body.urls.map((url: string) => (url)),

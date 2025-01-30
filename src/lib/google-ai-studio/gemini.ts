@@ -206,7 +206,7 @@ export class GeminiService {
 }
 
 // Create and export singleton instance
-function createGeminiService(): GeminiService {
+function createGeminiService(modelId?: string): GeminiService {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -215,7 +215,7 @@ function createGeminiService(): GeminiService {
 
     const config: GeminiConfig = {
         apiKey,
-        model: 'gemini-1.5-pro',
+        model: modelId || 'gemini-1.5-pro',
     };
 
     try {
@@ -228,6 +228,17 @@ function createGeminiService(): GeminiService {
 
 let geminiServiceInstance: GeminiService;
 
+export function initializeGeminiService(modelId?: string) {
+    try {
+        geminiServiceInstance = createGeminiService(modelId);
+        return geminiServiceInstance;
+    } catch (error) {
+        console.error('Fatal: Failed to initialize GeminiService:', error);
+        throw error;
+    }
+}
+
+// Initialize with default model
 try {
     geminiServiceInstance = createGeminiService();
 } catch (error) {

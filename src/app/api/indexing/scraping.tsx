@@ -17,14 +17,14 @@ export interface DocumentChunk {
   };
 }
 
+export interface ScraperResult {
+  rawHTML: string;
+  cleanHTML: string;
+}
+
 export class DocumentScraper {
-  // private embeddingService: EmbeddingService;
 
-  // constructor(projectId: string) {
-  //   // this.embeddingService = new EmbeddingService(projectId);
-  // }
-
-  async scrapeUrl(url: string): Promise<string> {
+  async scrapeUrl(url: string): Promise<ScraperResult> {
     const response = await fetch(url);
     const html = await response.text();
 
@@ -41,7 +41,10 @@ export class DocumentScraper {
     // Clean and validate content immediately after scraping
     const cleanedContent = this.cleanHtmlContent(content);
 
-    return cleanedContent;
+    return {
+      rawHTML: html,
+      cleanHTML: cleanedContent
+    };
   }
 
   private cleanHtmlContent(html: string): string {

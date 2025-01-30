@@ -66,7 +66,8 @@ export class DocumentProcessor {
       }
 
       await updateDocument<DocumentFields>('documents', doc.id, {
-        content: scrapedContent
+        content: scrapedContent.cleanHTML,
+        rawHTML: scrapedContent.rawHTML
       });
 
       console.log('#### Scraped and stored ####')
@@ -74,7 +75,7 @@ export class DocumentProcessor {
       // Step 3: Create chunks from content
       console.log('🟦 Creating chunks from content...');
       // const chunks = this.createChunks(scrapedContent);
-      const chunks =  await docChunker.chunkText(scrapedContent);
+      const chunks =  await docChunker.chunkText(scrapedContent.cleanHTML);
       console.log(`🟦 Created ${chunks.length} chunks`);
       if (chunks.length > 0) {
         console.log('🟦 Sample chunk sizes:', chunks.slice(0, 3).map(chunk => chunk.length));

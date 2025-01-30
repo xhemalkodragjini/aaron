@@ -1015,6 +1015,8 @@ description: How can we specify which VPC to use when creating Vertex AI Workben
     Research the following technical task using the provided Google Cloud documentation context.
     
     Task: {task}
+
+    Documentation Context: {context}
     
     Provide a response that:
     1. Clearly answers the technical question
@@ -1025,7 +1027,7 @@ description: How can we specify which VPC to use when creating Vertex AI Workben
     {format_instructions}
     
     Technical Response:`,
-    inputVariables: ["task", "format_instructions"],
+    inputVariables: ["task", "context", "format_instructions"],
   }),
 
   emailGeneration: new PromptTemplate({

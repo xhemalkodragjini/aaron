@@ -5,7 +5,9 @@ import { Plus, Trash2, AlertCircle } from 'lucide-react';
 
 interface URLManagerProps {
   urls: string;
+  entityDescription: string;
   onUrlsChange: (urls: string) => void;
+  onEntityDescriptionChange: (entityDescription: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClear: () => void;
   error?: string;
@@ -14,14 +16,16 @@ interface URLManagerProps {
 
 const URLManager: React.FC<URLManagerProps> = ({
   urls,
+  entityDescription,
   onUrlsChange,
+  onEntityDescriptionChange,
   onSubmit,
   onClear,
   error,
   isSubmitting
 }) => (
   <div className="bg-white rounded-lg shadow-md p-6">
-    <h2 className="text-xl font-semibold mb-4">Add Documentation URLs</h2>
+    <h2 className="text-xl font-semibold mb-4">Set Scraping page and content Target</h2>
     
     {error && (
       <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -40,6 +44,15 @@ const URLManager: React.FC<URLManagerProps> = ({
           disabled={isSubmitting}
         />
       </div>
+      <div className="mb-4">
+        <textarea
+          value={entityDescription}
+          onChange={(e) => onEntityDescriptionChange(e.target.value)}
+          placeholder="Describe the type of content you are looking to extract; Example: Raw text GCP documentation and best practices"
+          className="w-full h-48 p-4 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+          disabled={isSubmitting}
+        />
+      </div>
       <div className="flex items-center gap-4">
         <button
           type="submit"
@@ -47,7 +60,7 @@ const URLManager: React.FC<URLManagerProps> = ({
           className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
         >
           <Plus className="w-4 h-4" />
-          {isSubmitting ? 'Adding URLs...' : 'Add URLs'}
+          {isSubmitting ? 'Fetching...' : 'Get Target Content'}
         </button>
         <button
           type="button"
