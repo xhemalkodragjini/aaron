@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, Database, ExternalLink } from 'lucide-react';
 
 interface ExtractedContent {
     url: string;
@@ -11,14 +11,21 @@ interface ExtractedContent {
 interface ExtractedContentResultsProps {
     contents: ExtractedContent[];
     isLoading?: boolean;
+    onIndex?: (content: ExtractedContent) => void;
+    isIndexing?: { [key: string]: boolean };
 }
 
-const ExtractedContentResults: React.FC<ExtractedContentResultsProps> = ({ contents, isLoading }) => {
+const ExtractedContentResults: React.FC<ExtractedContentResultsProps> = ({
+    contents,
+    isLoading,
+    onIndex,
+    isIndexing = {}
+}) => {
     const [expandedItems, setExpandedItems] = React.useState<number[]>([]);
 
     const toggleExpand = (index: number) => {
-        setExpandedItems(prev => 
-            prev.includes(index) 
+        setExpandedItems(prev =>
+            prev.includes(index)
                 ? prev.filter(i => i !== index)
                 : [...prev, index]
         );
@@ -56,11 +63,11 @@ const ExtractedContentResults: React.FC<ExtractedContentResultsProps> = ({ conte
                             className="border border-gray-200 rounded-lg overflow-hidden"
                         >
                             <div className="flex items-center justify-between p-4">
-                                <div 
+                                <div
                                     className="flex items-center gap-3 flex-1 cursor-pointer"
                                     onClick={() => toggleExpand(index)}
                                 >
-                                    <a 
+                                    <a
                                         href={content.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
@@ -72,14 +79,24 @@ const ExtractedContentResults: React.FC<ExtractedContentResultsProps> = ({ conte
                                     </a>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                        content.status === 'success'
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${content.status === 'success'
                                             ? 'bg-green-100 text-green-800'
                                             : 'bg-red-100 text-red-800'
-                                    }`}>
+                                        }`}>
                                         {content.status}
                                     </span>
-                                    <button 
+                                    {content.status === 'success' && (
+                                        <button
+                                            onClick={() => onIndex?.(content)}
+                                            disabled={isIndexing[content.url]}
+                                            className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                                        >
+                                            <Database className="w-4 h-4" />
+                                            {isIndexing[content.url] ? 'Indexing...' : 'Index'}
+                                        </button>
+                                    )}
+
+                                    <button
                                         onClick={() => toggleExpand(index)}
                                         className="text-gray-500 hover:text-gray-700"
                                     >

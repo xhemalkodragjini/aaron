@@ -26,7 +26,7 @@ const AdminPanel = () => {
   // State
   const [urls, setUrls] = useState('');
   const [entityDescription, setEntityDescription] = useState('');
-  const [isIndexing, setIsIndexing] = useState(false);
+  const [isIndexing, setIsIndexing] = useState<{ [key: string]: boolean }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
   const [indexingProgress, setIndexingProgress] = useState(0);
@@ -38,49 +38,10 @@ const AdminPanel = () => {
   const [extractedContents, setExtractedContents] = useState<ExtractedContent[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
 
-  // Handlers
-  // const startIndexing = async () => {
-  //   setIsIndexing(true);
-  //   setIndexingStatus('running');
-  //   setStatusMessage('Starting indexing process...');
-  //   setIndexingProgress(0);
-
-  //   try {
-  //     const pendingDocs = documents.filter(doc => doc.status === 'pending');
-  //     const totalDocs = pendingDocs.length;
-
-  //     for (let i = 0; i < totalDocs; i++) {
-  //       const progress = Math.round((i / totalDocs) * 100);
-  //       setIndexingProgress(progress);
-  //       setStatusMessage(`Processing document ${i + 1} of ${totalDocs}...`);
-
-  //       const response = await fetch(`/api/indexing/${pendingDocs[i].id}/reindex`, {
-  //         method: 'POST'
-  //       });
-
-  //       if (!response.ok) {
-  //         throw new Error('Failed to reindex document');
-  //       }
-  //     }
-
-  //     setIndexingStatus('success');
-  //     setStatusMessage('Indexing completed successfully');
-  //     setLastIndexed(new Date().toLocaleString());
-  //     await refreshDocuments();
-
-  //   } catch (error) {
-  //     setIndexingStatus('error');
-  //     setStatusMessage('Error during indexing: ' + (error as Error).message);
-  //   } finally {
-  //     setIsIndexing(false);
-  //   }
-  // };
-
-
   const handleExtractContent = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(undefined);
-    setIsExtracting(true); 
+    setIsExtracting(true);
 
     try {
       const urlList = urls.split('\n')
@@ -116,50 +77,43 @@ const AdminPanel = () => {
     }
   };
 
+  // Add handleIndex function
+  const handleIndex = async (content: ExtractedContent) => {
+    if (!content.data || !content.url) return;
 
-  // const handleAddUrls = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setError(undefined);
-  //   setIsSubmitting(true);
+    setIsIndexing(prev => ({ ...prev, [content.url]: true }));
+    setError(undefined);
 
-  //   try {
-  //     const urlList = urls.split('\n')
-  //       .map(url => url.trim())
-  //       .filter(url => url);
+    try {
+      const response = await fetch('/api/indexing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          urls: [content.url],
+          extractedContent: content.data
+        }),
+      });
 
-  //     // if (!urlList.every(url => url.startsWith('https://cloud.google.com/'))) {
-  //     //   throw new Error('All URLs must be Google Cloud documentation URLs starting with "https://cloud.google.com"');
-  //     // }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to index content');
+      }
 
-  //     console.log('sending to /indexing: ' + JSON.stringify({ urls: urlList }))
+      const result = await response.json();
+      setDocuments(prev => [...prev, ...result.documents]);
+      setStatusMessage(`Successfully started indexing for ${content.url}`);
+      setIndexingStatus('success');
 
-  //     const response = await fetch('/api/indexing', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ urls: urlList, entityDescription: entityDescription }),
-  //     });
-
-  //     if (!response.ok) {
-  //       const error = await response.json();
-  //       throw new Error(error.error || 'Failed to add URLs');
-  //     }
-
-  //     const result = await response.json();
-  //     setDocuments(prev => [...prev, ...result.documents]);
-  //     setStatusMessage(`Successfully added ${urlList.length} URLs`);
-  //     setIndexingStatus('success');
-  //     setUrls('');
-
-  //   } catch (error) {
-  //     setError((error as Error).message);
-  //     setIndexingStatus('error');
-  //     setStatusMessage('Error adding URLs: ' + (error as Error).message);
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
+    } catch (error) {
+      setError((error as Error).message);
+      setIndexingStatus('error');
+      setStatusMessage('Error indexing content: ' + (error as Error).message);
+    } finally {
+      setIsIndexing(prev => ({ ...prev, [content.url]: false }));
+    }
+  };
 
   const handleDeleteDocument = async (id: string) => {
     try {
@@ -234,6 +188,8 @@ const AdminPanel = () => {
         <ExtractedContentResults
           contents={extractedContents}
           isLoading={isExtracting}
+          onIndex={handleIndex}
+          isIndexing={isIndexing}
         />
 
         <DocumentList

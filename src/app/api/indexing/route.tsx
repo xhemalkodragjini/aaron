@@ -31,6 +31,49 @@ const validateGcpDocUrl: InputURLValidator = (url: string): boolean => {
     url !== 'https://cloud.google.com/';
 };
 
+/**
+ * Document ID generator that converts URLs to document IDs
+ */
+const documentIdGenerator: DocumentIdGenerator = (url: string, index: number = 0) => {
+  try {
+    // Parse the URL to extract meaningful parts
+    const urlObj = new URL(url);
+    
+    // Combine hostname and pathname for the ID
+    let id = `${urlObj.hostname}${urlObj.pathname}`
+      .replace(/^www\./, '')         // Remove www prefix
+      .replace(/\.[^/.]+$/, '')      // Remove file extensions
+      .replace(/[^a-zA-Z0-9]/g, '-') // Replace special chars with hyphens
+      .toLowerCase()                  // Convert to lowercase
+      .replace(/-+/g, '-')           // Replace multiple hyphens with single hyphen
+      .replace(/^-+|-+$/g, '')       // Remove leading/trailing hyphens
+      .slice(0, 100);                // Limit length while preserving uniqueness
+
+    // Add index if provided (for handling duplicate URLs)
+    if (index > 0) {
+      id = `${id}-${index}`;
+    }
+
+    return id;
+  } catch (error) {
+    console.error('Error generating document ID:', error);
+    // Fallback to timestamp-based ID if URL processing fails
+    return `doc-${Date.now()}-${index}`;
+  }
+};
+
+/**
+ * Validates a documentation URL
+ */
+const validateDocUrl: InputURLValidator = (url: string): boolean => {
+  try {
+    const urlObj = new URL(url);
+    // Ensure URL has a valid protocol and hostname
+    return urlObj.protocol === 'https:' && urlObj.hostname.length > 0;
+  } catch {
+    return false;
+  }
+};
 
 // // Chunking utility function
 // function chunkContent(content: string): string[] {
@@ -71,13 +114,12 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    // Step 1 & 2: Upload documents to Firestore
+    // Step 1: Upload documents to Firestore
     const uploadResponse: UploadResponse<DocumentFields> = await uploadDocumentBatch<DocumentFields>(
-      // body.urls.map((url: string) => (url)),
       body.urls,
       batchConfig,
-      gcpURLDocumentIdGenerator,
-      validateGcpDocUrl
+      documentIdGenerator,
+      validateDocUrl
     );
 
     if (!uploadResponse.success) {
@@ -88,11 +130,9 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    console.log('#### Doc upload done ####')
-
-    // Step 2: Process each document (scrape, chunk, embed)
+    // Step 2: Process each document (chunk and embed)
     const processingPromises = uploadResponse.documents.map(doc =>
-      documentProcessor.processDocument(doc)
+      documentProcessor.processDocument(doc, body.extractedContent)
         .catch(error => {
           console.error(`Failed to process document ${doc.id}:`, error);
           return error;

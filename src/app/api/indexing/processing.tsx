@@ -49,25 +49,31 @@ export class DocumentProcessor {
   /**
    * Process a single document through the chunking and embedding pipeline
    */
-  async processDocument(doc: { id: string; data: DocumentFields }): Promise<void> {
+  async processDocument(doc: { id: string; data: DocumentFields }, extractedContent?: string): Promise<void> {
     try {
-      // Step 1: Update status to processing
       await updateDocument<DocumentFields>('documents', doc.id, {
         status: 'processing',
         error: undefined
       });
-
-      // Step 2: Scrape document content
-      // const scrapedContent = await scrapeDocument(doc.data.url);
-      const scrapedContent = await docScraper.scrapeUrl(doc.data.url);
-
-      if (!scrapedContent) {
-        throw new ProcessingError('No valid content after scraping and cleaning HTML');
+  
+      // Use extracted content if provided, otherwise scrape
+      let content;
+      if (extractedContent) {
+        content = {
+          cleanHTML: extractedContent,
+          rawHTML: extractedContent
+        };
+      } else {
+        content = await docScraper.scrapeUrl(doc.data.url);
       }
-
+  
+      if (!content) {
+        throw new ProcessingError('No valid content available');
+      }
+  
       await updateDocument<DocumentFields>('documents', doc.id, {
-        content: scrapedContent.cleanHTML,
-        rawHTML: scrapedContent.rawHTML
+        content: content.cleanHTML,
+        rawHTML: content.rawHTML
       });
 
       console.log('#### Scraped and stored ####')
@@ -75,7 +81,7 @@ export class DocumentProcessor {
       // Step 3: Create chunks from content
       console.log('🟦 Creating chunks from content...');
       // const chunks = this.createChunks(scrapedContent);
-      const chunks =  await docChunker.chunkText(scrapedContent.cleanHTML);
+      const chunks =  await docChunker.chunkText(content.cleanHTML);
       console.log(`🟦 Created ${chunks.length} chunks`);
       if (chunks.length > 0) {
         console.log('🟦 Sample chunk sizes:', chunks.slice(0, 3).map(chunk => chunk.length));
