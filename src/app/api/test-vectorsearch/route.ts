@@ -13,8 +13,6 @@ const db = new Firestore({
   //   keyFilename: process.env.GCP_KEY_FILE
 });
 
-// import { db } from "@/lib/Firebase/FirebaseConfig";
-
 const chunksCollection = db.collection('chunks');
 const embeddingService = new EmbeddingService();
 
