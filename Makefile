@@ -22,7 +22,7 @@ config:
 init:
 	gcloud services enable {storage,compute,run,cloudbuild,artifactregistry}.googleapis.com
 
-build:
+build: verify_yaml
 	gcloud builds submit . \
 		--tag ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ce-intern-repo/ce_intern_image:latest
 		
