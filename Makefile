@@ -3,6 +3,15 @@ ifneq (,$(wildcard .env.local))
     export
 endif
 
+# Create environment variables YAML file from .env file
+deployment.yaml: .env.local
+	@echo "# Generated from .env.$(ENV)" > $@
+	@grep -v '^#' $< | grep -v '^$$' | sed 's/^/  /' | sed 's/=/: /' >> $@
+
+# Display contents of the yaml file
+verify_yaml: deployment.yaml
+	@echo "ENV: deployment"
+
 
 config:
 	gcloud config set project ${GCP_PROJECT_ID}
@@ -21,9 +30,14 @@ deploy:
 	gcloud run deploy ce-intern-fe-service \
 		--image ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ce-intern-repo/ce_intern_image:latest \
 		--region ${GCP_REGION} \
-		--allow-unauthenticated
+		--service-account ce-intern-app-sa@knowledge-navigator-449510.iam.gserviceaccount.com \
+		--allow-unauthenticated \
+		--env-vars-file=deployment.yaml
 
 traffic:
 	gcloud run services update-traffic ce-intern-fe-service --to-latest
 
-all: config init build deploy traffics
+clean:
+	rm -f deployment.yaml
+
+all: config init build deploy traffic clean
