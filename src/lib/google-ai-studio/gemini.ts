@@ -215,7 +215,7 @@ function createGeminiService(modelId?: string): GeminiService {
 
     const config: GeminiConfig = {
         apiKey,
-        model: modelId || 'gemini-1.5-pro',
+        model: modelId || 'gemini-2.0-flash',
     };
 
     try {

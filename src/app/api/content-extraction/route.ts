@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   try {
     const { urls, entityDescription } = await request.json();
     console.log("Content Extraction for: ", urls, entityDescription)
-    const geminiService = initializeGeminiService("gemini-2.0-flash-exp");
+    const geminiService = initializeGeminiService("gemini-2.0-flash");
 
     if (!urls || !Array.isArray(urls) || urls.length === 0) {
       return NextResponse.json({
