@@ -423,10 +423,6 @@ export async function batchUpdateDocuments<T extends ChunkFields>(
 
   const db = new Firestore({
     projectId: process.env.GCP_PROJECT_ID,
-    // keyFilename: "poerschmann-ce-intern-firebase-adminsdk-laexk-33fb4db8dc.json",
-    credentials: {
-      client_email: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      private_key: process.env.FIREBASE_ADMIN_PRIVATE_KEY}
   });
   console.log("Firestore Instance: ", db)
 
