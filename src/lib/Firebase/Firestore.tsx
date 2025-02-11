@@ -36,11 +36,11 @@ import { Firestore } from "@google-cloud/firestore";
  */
 export async function getCollection(colId: string) {
   try {
-    const q = query(collection(db, colId));
-    const querySnapshot = await getDocs(q);
+    const collectionRef = db.collection(colId);
+    const snapshot = await collectionRef.get();
     const documents: { id: string; data: DocumentData }[] = [];
 
-    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+    snapshot.forEach((doc) => {
       documents.push({
         id: doc.id,
         data: doc.data()
@@ -74,10 +74,10 @@ export async function getCollection(colId: string) {
  */
 export async function getDocument(colId: string, docId: string) {
   try {
-    const docRef = doc(db, colId, docId);
-    const docSnap = await getDoc(docRef);
+    const docRef = db.collection(colId).doc(docId);
+    const docSnap = await docRef.get();
 
-    if (!docSnap.exists()) {
+    if (!docSnap.exists) {
       return NextResponse.json({
         success: false,
         error: 'Document not found'
@@ -137,8 +137,6 @@ export async function uploadDocument<T extends BaseFields>(
     }
 
     const documentId = generateId(url, 0);
-    const docRef = doc(db, colId, documentId);
-
     const timestamp = Timestamp.now();
     const documentData = {
       ...baseFields,
@@ -146,7 +144,7 @@ export async function uploadDocument<T extends BaseFields>(
       updatedAt: timestamp,
     } as T;
 
-    await setDoc(docRef, documentData);
+    await db.collection(colId).doc(documentId).set(documentData);
 
     return {
       success: true,
@@ -185,7 +183,6 @@ export async function uploadDocumentBatch<T extends DocumentFields>(
   } = config;
 
   const failedUploads: FailedUpload[] = [];
-
   console.log('Document URLS to be uploaded to Firestore: ' + urls)
 
   try {
@@ -193,17 +190,17 @@ export async function uploadDocumentBatch<T extends DocumentFields>(
     const processedDocs: Array<{
       id: string;
       data: T;
-    }> = [];;
+    }> = [];
 
     // Process in batches of batchSize
     for (let i = 0; i < urls.length; i += batchSize) {
-      const batch = writeBatch(db);
+      const batch = db.batch();
       const batchUrls = urls.slice(i, i + batchSize);
 
       for (const url of batchUrls) {
         const documentId = generateId(url, 0);
         const collectionId = colId || 'documents';
-        const docRef = doc(db, collectionId, documentId);
+        const docRef = db.collection(collectionId).doc(documentId);
 
         const documentData = {
           url: url,
@@ -284,7 +281,7 @@ export async function uploadChunkBatch<T extends ChunkFields>(
     }
 
     for (let i = 0; i < items.length; i += batchSize) {
-      const batch = writeBatch(db);
+      const batch = db.batch();
       const currentBatch = items.slice(i, i + batchSize);
 
       console.log(`🟦 Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(items.length / batchSize)}`);
@@ -313,11 +310,9 @@ export async function uploadChunkBatch<T extends ChunkFields>(
             updatedAt: timestamp
           } as T;
 
-
-          const docRef = doc(db, colId, item.chunkId);
+          const docRef = db.collection(colId).doc(item.chunkId);
           batch.set(docRef, docData);
 
-          // console.log(`🟦 Added chunk ${item.chunkId} to batch`);
           processedItems.push({ id: item.chunkId, data: docData });
         } catch (itemError) {
           console.error(`🔴 Error processing chunk:`, {
@@ -388,14 +383,13 @@ export async function updateDocument<T extends BaseFields>(
   updatedFields: Partial<T>
 ): Promise<boolean> {
   try {
-    const docRef: DocumentReference = doc(db, collectionId, documentId);
-
+    const docRef = db.collection(collectionId).doc(documentId);
     const updateData = {
       ...updatedFields,
       updatedAt: Timestamp.now()
     };
 
-    await setDoc(docRef, updateData, { merge: true });
+    await docRef.update(updateData);
     return true;
 
   } catch (error) {
@@ -423,10 +417,6 @@ export async function batchUpdateDocuments<T extends ChunkFields>(
 
   const db = new Firestore({
     projectId: process.env.GCP_PROJECT_ID,
-    // keyFilename: "poerschmann-ce-intern-firebase-adminsdk-laexk-33fb4db8dc.json",
-    // credentials: {
-      // client_email: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      // private_key: process.env.FIREBASE_ADMIN_PRIVATE_KEY}
   });
   console.log("Firestore Instance: ", db)
 
