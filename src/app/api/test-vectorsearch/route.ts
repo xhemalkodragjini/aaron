@@ -33,21 +33,19 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    
     // Generate embedding for the query text
-
     console.log("NL Query running through vectsearch: " + body.query)
-    const queryEmbeddings = await embeddingService.getEmbeddings([body.query]);
+    
+    // TODO: Implement Query Embedding
+    const queryEmbeddings = 
 
     const queryVector = queryEmbeddings[0];
     
-    // Configure vector search query
-    const vectorQuery: VectorQuery = chunksCollection.findNearest({
-      queryVector: queryVector,
-      vectorField: 'embedding',
-      limit: body.limit || 10,
-      distanceMeasure: 'COSINE',
-      // distanceThreshold: .5
-    });
+    
+    // Configure vector search query  
+    // TODO: Implement nearest neighbor search
+    const vectorQuery: VectorQuery = 
 
     // Execute search
     const vectorQuerySnapshot: VectorQuerySnapshot = await vectorQuery.get();
