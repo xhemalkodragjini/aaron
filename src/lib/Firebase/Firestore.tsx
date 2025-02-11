@@ -1,19 +1,7 @@
 // src/lib/Firebase/Firestore.tsx
 
 import { NextResponse } from 'next/server';
-import {
-  collection,
-  getDocs,
-  getDoc,
-  doc,
-  query,
-  QueryDocumentSnapshot,
-  DocumentData,
-  Timestamp,
-  setDoc,
-  writeBatch,
-  DocumentReference
-} from "firebase/firestore";
+
 import { db } from "@/lib/Firebase/FirebaseConfig";
 import {
   BaseFields,
@@ -27,7 +15,7 @@ import {
   FailedUpload
 } from './types';
 
-import { Firestore } from "@google-cloud/firestore";
+import { Timestamp, DocumentData } from "@google-cloud/firestore";
 
 /**
  * Fetches all documents from a specified collection
@@ -268,6 +256,7 @@ export async function uploadChunkBatch<T extends ChunkFields>(
   const failedItems: Array<{ url: string; error: string }> = [];
   const timestamp = Timestamp.now();
 
+
   try {
     // Log first chunk structure for debugging
     if (items[0]) {
@@ -384,9 +373,12 @@ export async function updateDocument<T extends BaseFields>(
 ): Promise<boolean> {
   try {
     const docRef = db.collection(collectionId).doc(documentId);
+    const cleanedFields = Object.fromEntries(
+      Object.entries(updatedFields).filter(([_, value]) => value !== undefined)
+    );
     const updateData = {
-      ...updatedFields,
-      updatedAt: Timestamp.now()
+      ...cleanedFields,
+      updatedAt: Timestamp.fromDate(new Date())
     };
 
     await docRef.update(updateData);
@@ -414,11 +406,6 @@ export async function batchUpdateDocuments<T extends ChunkFields>(
   }>,
   batchSize: number = 500
 ): Promise<boolean> {
-
-  const db = new Firestore({
-    projectId: process.env.GCP_PROJECT_ID,
-  });
-  console.log("Firestore Instance: ", db)
 
   try {
     for (let i = 0; i < updatedRecordsArr.length; i += batchSize) {
