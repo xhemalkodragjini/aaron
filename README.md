@@ -1,4 +1,4 @@
-# Welcome to the CE Intern: Generative AI Challenge Lab! 👩‍💻👨‍💻
+# Welcome to "Building Aaron the Intern": Generative AI Challenge Lab! 👩‍💻👨‍💻
 
 Imagine you're the newest Customer Engineer at Google Cloud. Your first assignment? Your task is helping your GCP customers make their tech work on GCP. You surely would love an intern to do the tedious technical research work for you...
 
@@ -39,6 +39,16 @@ gcloud auth application-default login
 *   Back in the Cloud Shell run `git clone <url of your forked repo>`. 
 
 
+## Set Environment Variables:
+**1. Env Vars in .env.local:**
+-   Create a new file (in your project root) called `.env.local` based on `.env.template`
+-   You will find you Gemini Api Key in [AI Studio](https://aistudio.google.com/apikey). You might need to select "Show projects in my organization"
+-   Fill out the project ID from your [Cloud Console](https://console.cloud.google.com/welcome)
+
+**1. Env Vars in terraform.tfvars:**
+-   Fill out the project ID just as you did in `.env.local`
+
+
 ## Deploy the required Infrastructure:
 
 **1. Run Terraform Script:**
@@ -60,20 +70,14 @@ terraform plan
 terraform apply
 ```
 
-## Set Environment Variables:
-**1. Env Vars in .env.local:**
--   Create a new file (in your project root) called `.env.local` based on `.env.template`
--   You will find you Gemini Api Key in [AI Studio](https://aistudio.google.com/apikey). You might need to select "Show projects in my organization"
--   Fill out the project ID from your [Cloud Console](https://console.cloud.google.com/welcome)
-
-**1. Env Vars in terraform.tfvars:**
--   Fill out the project ID just as you did in `.env.local`
-
 ## Running the App
 After completing the steps above you should be able to run the app and access it on localhost with 
 ```
 npm run dev
 ```
+
+*Optionally, you can deploy the web app to cloud run by running `make all` in root.*
+
 
 **Congratulations!** You've completed the basic GCP setup. You are now ready to explore the application and start the challenges!
 
