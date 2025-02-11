@@ -129,14 +129,14 @@ Here's a sneak peek at the challenges that await you:
 
 **Challenge 1: LLM Powered Data Mining - "Web Detective" 🕵️‍♀️**
 
-*   **Mission:**  Your first task is to become a "Web Detective"! You'll learn how to use an LLM to intelligently extract specific information from websites.  Imagine you need to quickly find the pricing details for Vertex AI.  Instead of manually sifting through pages, you'll teach the LLM to do it for you!
+*   **Mission:**  Bring your text prompting to the next level.
 *   **Learnings:**
     *   **Prompt Engineering for Extraction:** Crafting effective prompts to instruct the LLM to extract exactly what you need.  Take a look at the `extractionPrompt` in `src/app/api/content-extraction/route.ts` (lines 9-32) as a starting point.
 *   **Key Technologies:** Next.js, Gemini API, Prompt Engineering.
 
 **Challenge 2: Create Knowledge Base - "The Library Builder" 📚**
 
-*   **Mission:**  Time to become "The Library Builder"! You'll build the foundation of our intelligent assistant – a knowledge base of GCP documentation.  You'll learn how to break down large documents into manageable chunks and create embeddings, turning text into numerical representations that the AI can understand semantically.
+*   **Mission:**  Implement a custom indexing pipeline on GCP.
 *   **Learnings:**
     *   **Chunking Strategies:**  Exploring different ways to divide text into chunks for optimal retrieval.
     *   **Embedding Creation:** Understanding how text embeddings are generated and their role in semantic search.
@@ -145,7 +145,8 @@ Here's a sneak peek at the challenges that await you:
 
 **Challenge 3: Simple RAG - "The Question Answering Machine" 🤖**
 
-*   **Mission:**  Now you're "The Question Answering Machine" architect! You'll put your knowledge base to work by building a simple Retrieval-Augmented Generation (RAG) system.  Users will ask questions about GCP, and your application will search the knowledge base and generate answers based on relevant documentation snippets.
+*   **Mission:**  Build a Basic RAG Q&A pipeline.
+
 *   **Learnings:**
     *   **Simple RAG Pipeline:**  Understanding the core components of RAG: Retrieval (searching the knowledge base) and Generation (using an LLM to create answers).
     *   **Semantic Search:**  Using vector search to find relevant documents based on meaning, not just keywords.  The `VectorSearchUtil` is your search engine.
@@ -154,7 +155,7 @@ Here's a sneak peek at the challenges that await you:
 
 **Challenge 4: Advanced RAG - "The Email Alchemist" 📧**
 
-*   **Mission:**  Become "The Email Alchemist"! This is where it all comes together. You'll build the full email generation pipeline, taking a customer call transcript as input, identifying technical questions, researching answers from the knowledge base, and finally, generating a professional follow-up email.
+*   **Mission:**  Build an email generation pipeline based on an advanced RAG chain.
 *   **Learnings:**
     *   **Prompt Chaining with Langchain:**  Using Langchain's `RunnableSequence` to create complex, multi-step workflows.
     *   **Advanced RAG Techniques:**  Building a more sophisticated RAG system that involves task extraction, research, and email generation.
@@ -163,7 +164,7 @@ Here's a sneak peek at the challenges that await you:
 
 **Challenge 5: Tracing & Tracking - "The Observability Guru" 🔭**
 
-*   **Mission:**  Step into the shoes of "The Observability Guru"!  You'll learn how to monitor and track your Gen AI application using Langfuse.  This is crucial for understanding performance, debugging issues, and continuously improving your AI assistant.
+*   **Mission:**  Observce and monitor your LLM calls.
 *   **Learnings:**
     *   **Tracing and Tracking:**  Understanding the importance of observability in LLM applications.
     *   **Langfuse Integration:**  Using Langfuse to trace requests, monitor performance, and analyze results.
