@@ -118,7 +118,9 @@ export class GeminiService {
     async generateContent(prompt: string, options?: GenerationOptions): Promise<string> {
         try {
             const model = this.getModel(options);
-            const result = await model.generateContent(prompt);
+
+            // TODO: Gemini Content Generation
+
             const response = await result.response;
             return response.text();
         } catch (error) {
@@ -215,7 +217,7 @@ function createGeminiService(modelId?: string): GeminiService {
 
     const config: GeminiConfig = {
         apiKey,
-        model: modelId || 'gemini-2.0-flash',
+        model: modelId || 'gemini-1.5-flash-8b',
     };
 
     try {
