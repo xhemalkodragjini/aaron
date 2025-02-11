@@ -54,14 +54,14 @@ Before implementing the search functionality, let's explore the existing codebas
     -   It receives the user's query from the frontend, generates an embedding for it, and performs a vector similarity search against the Firestore database.
     -   *This is where the core RAG logic lives.* 
     -   Key elements to examine:
-            -   `Firestore`, `VectorQuery`, `VectorQuerySnapshot` from `@google-cloud/firestore` are used for interacting with Firestore and performing vector searches.
-            -   `EmbeddingService` from  `@/app/api/indexing/embedding` is used to generate embeddings for the search query.
-            -   `POST` function: This function handles the incoming search request.
-            -   It extracts the `query` from the request body.
-            -   It uses `embeddingService.getEmbeddings` to generate vector embeddings for the search query.
-            -   It constructs a `VectorQuery` to perform a nearest neighbor search in the `chunks` collection, using the generated query vector and the `embedding` field.
-            -   It executes the vector query using `vectorQuery.get()` and processes the results to extract relevant information like `documentId`, `content`, `metadata`, and `score`.
-            -   Finally, it returns the search results as a JSON response.
+        -   `Firestore`, `VectorQuery`, `VectorQuerySnapshot` from `@google-cloud/firestore` are used for interacting with Firestore and performing vector searches.
+        -   `EmbeddingService` from  `@/app/api/indexing/embedding` is used to generate embeddings for the search query.
+        -   `POST` function: This function handles the incoming search request.
+        -   It extracts the `query` from the request body.
+        -   It uses `embeddingService.getEmbeddings` to generate vector embeddings for the search query.
+        -   It constructs a `VectorQuery` to perform a nearest neighbor search in the `chunks` collection, using the generated query vector and the `embedding` field.
+        -   It executes the vector query using `vectorQuery.get()` and processes the results to extract relevant information like `documentId`, `content`, `metadata`, and `score`.
+        -   Finally, it returns the search results as a JSON response.
 
 
 ## Step 2: Implement Query Embeddings 🧮
@@ -70,7 +70,7 @@ Now that we understand the codebase, let's implement the query embedding functio
 
 ### Background
 
-In [Challenge 002](002-knowledge-base.md), we created a knowledge base by:
+In [Challenge 002](https://github.com/jakobap/aaron/blob/002-build-knowledgebase/002-build-knowledgebase.md), we created a knowledge base by:
 1. Breaking documents into chunks
 2. Converting those chunks into embeddings
 3. Storing them in Firestore with vector search capabilities
