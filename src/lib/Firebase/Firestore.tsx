@@ -62,6 +62,16 @@ export async function getCollection(colId: string) {
  */
 export async function getDocument(colId: string, docId: string) {
   try {
+    // Validate inputs
+    if (!colId || !docId) {
+      console.error('Invalid inputs:', { colId, docId });
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid collection or document ID'
+      }, { status: 400 });
+    }
+
+    console.log('Fetching document:', { colId, docId });
     const docRef = db.collection(colId).doc(docId);
     const docSnap = await docRef.get();
 
