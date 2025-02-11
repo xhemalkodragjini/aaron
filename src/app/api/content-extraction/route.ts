@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         // Scrape the URL
         const scrapedContent = await docScraper.scrapeUrl(url);
 
-        console.log("Scraped Content (" , url ,"): ", scrapedContent)
+        // console.log("Scraped Content (" , url ,"): ", scrapedContent)
 
         // Format the prompt
         const formattedPrompt = await extractionPrompt.format({
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         // Get structured response from Gemini
         const extractionResult = await geminiService.generateContent(formattedPrompt);
 
-        console.log('Extraction Result:', extractionResult);
+        // console.log('Extraction Result:', extractionResult);
 
         return {
           url,
