@@ -155,7 +155,9 @@ Run the application with
 npm run dev
 ```
 
-Once your summary generation is working:
+And visit `/search`
+
+That will bring you to the search interface
 1. Test with a variety of queries
 2. Refine the prompt based on results
 
