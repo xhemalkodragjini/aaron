@@ -30,18 +30,17 @@ In this step, you will be creating the prompt that guides Gemini in extracting c
 **Your Task:**
 
 **Write the `extractionPrompt` from scratch.** You need to create a Langchain `PromptTemplate` that instructs the LLM to act as a "specialized content extraction expert" and extract relevant content from HTML based on an `entityDescription`.  Consider the following requirements for your prompt:
-    *   **Role Definition:** Clearly instruct the LLM to act as a specialized content extraction expert.
-    *   **Input Variables:**  The prompt should accept two input variables: `{entityDescription}` and `{htmlContent}`.
-    *   **Instructions for Extraction:** Provide detailed instructions on how to analyze the HTML content and extract relevant information.  Think about including instructions to:
-        *   Identify sections matching the `entityDescription`.
-        *   Extract the full original content, preserving structure.
-        *   Remove navigation and boilerplate.
-        *   Preserve technical details and code snippets.
-        *   Format the output as clean, structured text.
-        *   Avoid summarization and return full text.
-        *   Evaluate all parts of the HTML input.
-        *   Return cleaned text, not HTML code.
-    *   **Output Format:**  Specify that the output should be "Extracted Text:".
+-   **Role Definition:** Clearly instruct the LLM to act as a specialized content extraction expert.
+-   **Input Variables:**  The prompt should accept two input variables: `{entityDescription}` and `{htmlContent}`.
+-   **Instructions for Extraction:** Provide detailed instructions on how to analyze the HTML content and extract relevant information.  Think about including instructions to:
+    *   Identify sections matching the `entityDescription`.
+    *   Extract the full original content, preserving structure.
+    *   Remove navigation and boilerplate.
+    *   Preserve technical details and code snippets.
+    *   Format the output as clean, structured text.
+    *   Avoid summarization and return full text.
+    *   Evaluate all parts of the HTML input.
+    *   Return cleaned text, not HTML code.
 
 **Hints:**
 To write an effective prompt, review the following Google Cloud & Langchain documentation:
