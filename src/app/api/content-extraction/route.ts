@@ -6,7 +6,17 @@ import { PromptTemplate } from "@langchain/core/prompts";
 const docScraper = new DocumentScraper();
 
 // Create extraction prompt template
-const extractionPrompt = PromptTemplate.fromTemplate(``);
+const extractionPrompt = PromptTemplate.fromTemplate(`
+  You are a specialized content extraction expert. Extract relevant content from {htmlContent}.
+  Identify sections matching the {entityDescription}.
+  Extract the full original content, preserving structure.
+  Remove navigation and boilerplate.
+  Preserve technical details and code snippets.
+  Format the output as clean, structured text.
+  Avoid summarization and return full text.
+  Evaluate all parts of the HTML input.
+  Return cleaned text, not HTML code.
+  `);
 
 export async function POST(request: NextRequest) {
   try {
