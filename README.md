@@ -106,43 +106,26 @@ Before you dive into the challenges, let's take a bird's-eye view of the applica
 
 The application follows a typical web application structure with a Next.js frontend and backend, leveraging Google Cloud services for Generative AI and data storage.
 
-*   **Frontend (Next.js Frontend):**  This is the user interface you interact with in your browser. Built with React and Next.js, it handles:
-    *   Presenting the **Transcript Input** area (`src/app/components/QueryPanel/TranscriptInput.tsx`) where you paste customer call transcripts.
-    *   Displaying **Instructions** and information (`src/app/components/QueryPanel/InstructionsPanel.tsx`).
-    *   Showing the **generated Email Output** (`src/app/components/QueryPanel/EmailOutput.tsx`).
-    *   Rendering **Research Topics and Findings** (`src/app/components/QueryPanel/ResearchTopicResults.tsx`).
-    *   Listing **Indexed Documents** (`src/app/components/QueryPanel/DocumentList.tsx`).
-    *   Navigation and overall user experience (`src/app/page.tsx`, `src/app/query/page.tsx`).
+*   **Frontend (Next.js Frontend):**  This is the user interface you interact with in your browser. 
 
 *   **Backend API (Next.js API Routes):**  These are the server-side functions that power the application, handling requests from the frontend and orchestrating the AI processes. Key API routes include:
-    *   `/api/transcript-processing` (Conceptual):  This endpoint (not explicitly created as a separate route in the provided code, but implied within the `query/page.tsx` logic and using `processTranscript` from `src/lib/langchain/TranscriptSummChain.tsx`) receives the transcript from the frontend and triggers the Langchain processing chains.
-    *   `/api/content-extraction` (`src/app/api/content-extraction/route.ts`):  Used in Challenge 1 for extracting content from web pages based on prompts.
-    *   `/api/generate-summary` (`src/app/api/generate-summary/route.tsx`):  Used in Challenge 3 for generating summaries of GCP documentation content.
 
-*   **Langchain Processing Chains (`src/lib/langchain/TranscriptSummChain.tsx`):**  Langchain is the framework that structures the AI workflow.  The application uses three main chains:
-    *   **Task Extraction Chain (`createTaskExtractionChain`):**  Analyzes the transcript and extracts technical questions or tasks.
-    *   **Research Chain (`createResearchChain`):**  For each task, it searches the Firestore knowledge base and uses the Gemini API to research and find answers in the GCP documentation.
-    *   **Email Generation Chain (`createEmailChain`):**  Takes the extracted tasks and research findings and generates a draft follow-up email.
+*   **Langchain Processing Chains:**  Langchain is the framework that structures the AI workflow.
 
-*   **Gemini API (`src/lib/google-ai-studio/gemini.ts`):** This service acts as an interface to Google's Gemini family of Generative AI models. It's used for:
-    *   Generating text for task extraction, research answers, and email drafts.
-    *   Potentially for creating embeddings (though not explicitly shown in the provided snippets, embedding creation is a common use case for Gemini).
+*   **Gemini API:** This service acts as an interface to Google's Gemini family of Generative AI models. It's used for:
 
-*   **Firestore Knowledge Base (Firestore):**  This is the database where the GCP documentation is stored in chunks, along with their vector embeddings. It's used for:
-    *   Storing indexed GCP documentation content.
-    *   Performing vector similarity searches to find relevant documentation for user queries.
+*   **Firestore Knowledge Base (Firestore):**  This is the database where the GCP documentation is stored in chunks, along with their vector embeddings. 
 
-*   **Vector Search Util (Conceptual `VectorSearchUtil`):**  This utility handles the vector search queries against the Firestore knowledge base to retrieve relevant document chunks.
+*   **Vector Search Util:**  This utility handles the vector search queries against the Firestore knowledge base to retrieve relevant document chunks.
 
-*   **Langfuse (Optional Langfuse):**  Integrated for Challenge 5, Langfuse is an observability platform for LLM applications. It helps to:
-    *   Trace the execution of Langchain chains.
-    *   Monitor performance and identify bottlenecks.
-    *   Evaluate and compare different prompts and model configurations.
+*   **Langfuse (Optional Langfuse):**  Integrated for Challenge 5, Langfuse is an OSS observability platform for LLM applications.
 
 
 # Your  Missions 🏋️‍♀️
 
 Here's a sneak peek at the challenges that await you:
+
+![Aaron the Intern](./ws_architecture.png)
 
 **Challenge 1: LLM Powered Data Mining - "Web Detective" 🕵️‍♀️**
 
