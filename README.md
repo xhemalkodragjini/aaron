@@ -1,8 +1,8 @@
 # Welcome to "Building Aaron the Intern": Generative AI Challenge Lab! 👩‍💻👨‍💻
 
-Imagine you're the newest Customer Engineer at Google Cloud. Your first assignment? Your task is helping your GCP customers make their tech work on GCP. You surely would love an intern to do the tedious technical research work for you...
+Imagine you're the newest Customer Engineer at Google Cloud. Your task is helping your GCP customers make their tech work on GCP. You surely would love an intern to do the tedious technical research work for you...
 
-But have you ever tried getting budget for something like that..?! Well, great that you live in the age of AI. So why not just building that intern yourself? Let's "it": **"Aaron the intern"**.
+But have you ever tried getting budget for something like that..?! Well, great that you live in the age of AI. So why not just building that intern yourself? Let's call "it": **"Aaron the intern"**.
 
 This lab is designed to guide you through  GCP Generative AI, Langchain, and building real-world applications.  We'll be tackling a series of challenges, each building upon the last, to transform a basic Next.js application into a powerful AI-driven tool.
 
