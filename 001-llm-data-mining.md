@@ -98,3 +98,13 @@ Currently, the application is not using the most powerful model. To optimize the
 
 3.  **Plan for Model Update (Next Step):**
     *   Decide if you want to upgrade to a more powerful model for content extraction. If you identify a suitable candidate apply the change in the code the change.
+
+
+    ### Next Steps
+    Run the application with 
+    ```
+    npm run dev
+    ```
+
+    Try out the extractin with one or multiple webpages and entity descriptions. You are not limited to GCP documentation pages. You could also extract product details from ecommerce pages, or similar...
+    
